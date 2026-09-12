@@ -30,8 +30,11 @@ Based on [../project_state/overview.md](../project_state/overview.md) and [../kn
 ## Phased approach
 
 ### Phase 0 — Repo/build skeleton
-- Add `vcpkg` as a git submodule at the repo root (`vcpkg/`), with a `vcpkg.json` manifest declaring dependencies as they're identified. Expected candidates: `directx-headers`, and later (Phase 4) `imgui` with its SDL3/Vulkan/DX12 binding features — exact feature-flag names to verify against the current port when reached. `sdl2`/`openal-soft` are **not** needed for Phase 1-3 (miniaudio is vendored directly as a single header per its intended usage model; SDL3 doesn't enter until Phase 4).
-- Root `CMakeLists.txt` wiring the vcpkg toolchain file (`vcpkg/scripts/buildsystems/vcpkg.cmake`) and a `CMakePresets.json` targeting the **x64** VS2026/MSVC generator only (no 32-bit configuration).
+Structure follows [../knowledge_base/cmake_vcpkg_reference_patterns.md](../knowledge_base/cmake_vcpkg_reference_patterns.md), the owner's established pattern from one of their other, more mature projects:
+- Add `vcpkg` as a git submodule at **`externals/vcpkg`** (not a root-level `vcpkg/`), plus a root `vcpkg.json` manifest and a root `vcpkg-configuration.json` registering `overlay-ports`/`overlay-triplets` directories from day one (even if initially near-empty).
+- Split build config into `cmake/Options.cmake` (options + `VCPKG_MANIFEST_FEATURES` toggling + compiler flags, **included before `project()`**), `cmake/FindDependencies.cmake` (all `find_package()` calls), and `cmake/Dependencies.cmake` (only if something ends up needed via `FetchContent` instead of vcpkg — expected to be empty/unused initially). Root `CMakeLists.txt` stays a thin orchestrator that just includes these in order.
+- `vcpkg.json` dependencies expected for Phase 1-3: `directx-headers`. `miniaudio` gets wired via the header-only `find_path()` + `add_library(... INTERFACE IMPORTED)` workaround documented in the reference file (its vcpkg port ships no usable CMake config). SDL3/Vulkan/imgui are **not** needed until Phase 4.
+- `CMakePresets.json` with a single `Main` preset: generator `"Visual Studio 18 2026"` (confirmed exact string from the reference project), `CMAKE_TOOLCHAIN_FILE` pointing at `./externals/vcpkg/scripts/buildsystems/vcpkg.cmake`, **x64 only** — no multi-arch preset matrix needed given the x64-only decision.
 - No source changes in this phase — it only needs to prove the build skeleton configures cleanly (an empty/stub target is fine).
 
 ### Phase 1 — Get it running (compatibility-shim path, x64, minimal source changes)
@@ -58,6 +61,7 @@ This is the "immediate goal" milestone — get the existing engine running on mo
 - Replace the DirectDraw-via-shim path with **SDL3** for windowing/input/audio/event handling, replacing `WIN32LIB`'s Windows-specific `KEYBOARD`/`MOUSE`/`WINCOMM`/`PLAYCD`/`TIMER` modules — this is what actually enables a genuine cross-platform (Windows/Linux/macOS) build; Phases 0-3 only reach modern *Windows*.
 - Build **two separate, hand-rolled rendering backends**: Vulkan (primary/cross-platform) and Direct3D 12 (Windows-specific) — not SDL3's `SDL_GPU` abstraction.
 - Integrate **Dear ImGui** on top of both backends (`imgui_impl_sdl3` + `imgui_impl_vulkan`/`imgui_impl_dx12`) for a debug overlay (successor to `CODE/MONOC.CPP`'s mono-monitor debug screen) and likely a rebuilt map-editor UI — not the in-game HUD, which stays on the original pixel-art `GadgetClass` widget rendering ported to whichever backend is active.
+- **Reuse the reference project's `overlay-ports/imgui`** ([../knowledge_base/cmake_vcpkg_reference_patterns.md](../knowledge_base/cmake_vcpkg_reference_patterns.md)) rather than the stock vcpkg registry imgui port — it already pins a newer imgui with `sdl3-binding`, `vulkan-binding`, and `dx12-binding` features all present simultaneously, confirmed by direct inspection.
 
 ### Phase 5 — ASM → C++ rewrite of hot paths (deferred backlog)
 - Revisit whether the original performance rationale for hand-tuned routines (e.g. `SHAPE/DS_*.ASM`'s 13 blit variants) still holds under modern compilers/hardware; rewrite in C++ where it doesn't, removing the UASM build step entirely once complete.
