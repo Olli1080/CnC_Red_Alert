@@ -1,0 +1,4 @@
+# Plans (Done) — Index
+
+## 2026-09-12 — Initial Agent knowledge base population
+Full repository investigation and creation of the `Agent/` knowledge base structure (this folder tree): [agent_policies/](../agent_policies/summary.md), [project_state/](../project_state/summary.md), [knowledge_base/](../knowledge_base/summary.md), [Analysis/](../Analysis/summary.md), plus the root [AGENTS.md](../../AGENTS.md) entry point. Performed via five parallel exploration passes, one per module group (`CODE/`; `WIN32LIB/`; `WWFLAT32/`; `VQ/`+`WINVQ/`; `IPX/`+`LAUNCH/`+`LAUNCHER/`+`TOOLS/`), each opening representative source files rather than inferring from filenames alone. See [../project_state/summary.md](../project_state/summary.md) for coverage notes and [../Analysis/summary.md](../Analysis/summary.md) for what was deliberately left as future work.
