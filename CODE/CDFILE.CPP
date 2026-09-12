@@ -46,6 +46,12 @@
 #include	"cdfile.h"
 #include	<stdio.h>
 #include	<string.h>
+#include	<stdlib.h>
+
+// PATH_MAX is POSIX (<limits.h>); MSVC's equivalent is _MAX_PATH (<stdlib.h>).
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
 
 #ifndef WIN32
 #include	<wwstd.h>
@@ -98,7 +104,8 @@ int harderr_handler(unsigned int , unsigned int , unsigned int *)
 int harderr_handler(unsigned int , unsigned int , unsigned int __far *)
 #endif
 {
-	return(_HARDERR_FAIL);
+	return(1);	// _HARDERR_FAIL: this handler is only ever installed via _harderr() in the
+				// non-WIN32 build below, so this value is never actually used under WIN32.
 }
 
 
@@ -120,7 +127,7 @@ int harderr_handler(unsigned int , unsigned int , unsigned int __far *)
 int cdecl Is_Disk_Inserted(int disk)
 {
 #ifndef OBSOLETE
-	struct find_t fb;
+	struct _finddata_t fb;
 	char	scan[] = "?:\\*.*";
 
 	#ifndef WIN32
@@ -128,7 +135,11 @@ int cdecl Is_Disk_Inserted(int disk)
 	#endif
 
 	scan[0] = (char)('A' + disk);
-	return(_dos_findfirst(scan, _A_SUBDIR, &fb) == 0);
+	intptr_t handle = _findfirst(scan, &fb);
+	if (handle != -1) {
+		_findclose(handle);
+	}
+	return(handle != -1);
 #else
 	struct {
 		struct {

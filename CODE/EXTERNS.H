@@ -51,6 +51,38 @@
 #include	"goptions.h"
 #include	"options.h"
 #include	"infantry.H"
+#include	"ccfile.h"
+#include	"session.h"
+#include	"nullmgr.h"
+#include	"ipxmgr.h"
+#include	"tevent.h"
+#include	"taction.h"
+#include	"bench.h"
+#include	"rules.h"
+#include	"rndstraw.h"
+#include	"random.h"
+#include	"carry.h"
+#include	"scenario.h"
+#include	"version.h"
+#include	"logic.h"
+#include	"mouse.h"
+#include	"score.h"
+#include	"theme.h"
+#include	"special.h"
+#include	"overlay.h"
+#include	"smudge.h"
+#include	"template.h"
+#include	"warhead.h"
+#include	"queue.h"
+#include	"base.h"
+#include	"vortex.h"
+#include	"event.h"
+#include	<dsound.h>
+#include	<vqa32/vqaplay.h>
+#include	<mouse.h>
+#include	<playcd.h>
+
+#include "palette.h"
 
 
 extern char _staging_buffer[32000];
@@ -118,7 +150,7 @@ extern unsigned char 	*InterpolatedPalettes[100];
 extern BOOL					PalettesRead;
 extern unsigned			PaletteCounter;
 extern int 					AllDone;
-extern HANDLE 				hInstance;
+extern HINSTANCE 				hInstance;
 extern bool 				InMovie;
 extern WinTimerClass	*		WindowsTimer;
 extern WWMouseClass *		WWMouse;
@@ -313,7 +345,10 @@ extern long							SidebarRedraws;
 extern DMonoType					MonoPage;
 extern bool							GameActive;
 extern bool							SpecialFlag;
-extern bool							ScenarioInit;
+// int, not bool: used throughout as a nesting depth counter (ScenarioInit++/ScenarioInit--
+// pairs), and bool-- has never been legal C++ (bool++ was a deprecated legacy allowance, removed
+// in C++17; only Watcom's leniency let this compile before).
+extern int							ScenarioInit;
 extern HouseClass *				PlayerPtr;
 extern PaletteClass 				CCPalette;
 extern PaletteClass 				BlackPalette;

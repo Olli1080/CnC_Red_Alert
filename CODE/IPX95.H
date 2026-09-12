@@ -48,16 +48,16 @@
 /*
 ** Types for function pointers
 */
-typedef BOOL __stdcall (*IPXInitialiseType) (void);
-typedef BOOL __stdcall (*IPXGetOutstandingBuffer95Type) (unsigned char*);
-typedef void __stdcall (*IPXShutDown95Type) (void);
-typedef int  __stdcall (*IPXSendPacket95Type) (unsigned char *, unsigned char *, int, unsigned char*, unsigned char*);
-typedef int  __stdcall (*IPXBroadcastPacket95Type) (unsigned char *, int);
-typedef BOOL __stdcall (*IPXStartListening95Type) (void);
-typedef int  __stdcall (*IPXOpenSocket95Type) (int);
-typedef void __stdcall (*IPXCloseSocket95Type) (int);
-typedef int  __stdcall (*IPXGetConnectionNumber95Type) (void);
-typedef int  __stdcall (*IPXGetLocalTarget95) (unsigned char *, unsigned char*, unsigned short, unsigned char*);
+typedef BOOL (__stdcall *IPXInitialiseType) (void);
+typedef BOOL (__stdcall *IPXGetOutstandingBuffer95Type) (unsigned char*);
+typedef void (__stdcall *IPXShutDown95Type) (void);
+typedef int  (__stdcall *IPXSendPacket95Type) (unsigned char *, unsigned char *, int, unsigned char*, unsigned char*);
+typedef int  (__stdcall *IPXBroadcastPacket95Type) (unsigned char *, int);
+typedef BOOL (__stdcall *IPXStartListening95Type) (void);
+typedef int  (__stdcall *IPXOpenSocket95Type) (int);
+typedef void (__stdcall *IPXCloseSocket95Type) (int);
+typedef int  (__stdcall *IPXGetConnectionNumber95Type) (void);
+typedef int  (__stdcall *IPXGetLocalTarget95) (unsigned char *, unsigned char*, unsigned short, unsigned char*);
 
 
 

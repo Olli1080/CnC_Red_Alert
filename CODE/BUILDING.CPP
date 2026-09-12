@@ -1191,7 +1191,7 @@ bool BuildingClass::Unlimbo(COORDINATE coord, DirType dir)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   07/15/1995 JLB : Power ratio gets adjusted.                                               *
  *=============================================================================================*/
-ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, int forced)
+ResultType BuildingClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
 {
 	assert(Buildings.ID(this) == ID);
 	assert(IsActive);
@@ -3524,7 +3524,7 @@ int BuildingClass::Mission_Deconstruction(void)
 						delete this;
 
 						if (unit->Unlimbo(place, DIR_SW)) {
-							unit->Strength = unit->Class_Of().MaxStrength * ratio;
+							unit->Strength = (int)unit->Class_Of().MaxStrength * ratio;
 
 							/*
 							**	Lift the move destination from the building and assign
@@ -5088,7 +5088,7 @@ void BuildingClass::Read_INI(CCINIClass & ini)
 
 				if (b->Unlimbo(Cell_Coord(cell), facing)) {
 					strength = min(strength, 0x100);
-					strength = b->Class->MaxStrength * fixed(strength, 256);
+					strength = (int)b->Class->MaxStrength * fixed(strength, 256);
 					b->Strength = strength;
 					if (b->Strength > b->Class->MaxStrength-3) b->Strength = b->Class->MaxStrength;
 					b->IsALemon = false;

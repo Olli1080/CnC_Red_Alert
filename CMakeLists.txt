@@ -18,6 +18,9 @@ target_link_libraries(phase0_smoke_test PRIVATE Microsoft::DirectX-Headers)
 # Sub-milestone 1a: WIN32LIB compiling standalone (see Agent/plans_wip/modernization_cmake_vcpkg.md)
 add_subdirectory(WIN32LIB)
 
+# Sub-milestone 1b: CODE/ compiling and linking against win32lib
+add_subdirectory(CODE)
+
 if(BUILD_TESTS)
     enable_testing()
 endif()

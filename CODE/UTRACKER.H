@@ -37,7 +37,11 @@
  *                                                                         *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
+// This file had no include guard at all - harmless as long as nothing ever included it twice
+// in one translation unit, which broke the moment a second header (HOUSE.H) started including
+// it directly instead of relying on transitive include order.
+#ifndef UTRACKER_H
+#define UTRACKER_H
 
 /*
 ** UnitTracker Class
@@ -68,6 +72,8 @@ class	UnitTrackerClass {
 		int	InNetworkFormat;
 
 };
+
+#endif // UTRACKER_H
 
 
 

@@ -40,6 +40,12 @@
 #include	"function.h"
 #include	<conio.h>
 #include	<io.h>
+#include	<stdlib.h>
+
+// PATH_MAX is POSIX (<limits.h>); MSVC's equivalent is _MAX_PATH (<stdlib.h>).
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
 
 #ifdef WIN32
 #include  "ccdde.h"
@@ -247,7 +253,7 @@ int main(int argc, char * argv[])
 	unsigned olddrive;
 	char oldpath[PATH_MAX];
 	getcwd(oldpath, sizeof(oldpath));
-	_dos_getdrive(&olddrive);
+	olddrive = _getdrive();
 
 	/*
 	**	Change directory to the where the executable is located. Handle the
@@ -255,7 +261,6 @@ int main(int argc, char * argv[])
 	*/
 	char drive[_MAX_DRIVE];
 	char path[_MAX_PATH];
-	unsigned drivecount;
 	_splitpath(argv[0], drive, path, NULL, NULL);
 	if (!drive[0]) {
 		drive[0] = ('A' + olddrive)-1;
@@ -263,7 +268,7 @@ int main(int argc, char * argv[])
 	if (!path[0]) {
 		strcpy(path, ".");
 	}
-	_dos_setdrive(toupper((drive[0])-'A')+1, &drivecount);
+	_chdrive(toupper((drive[0])-'A')+1);
 	if (path[strlen(path)-1] == '\\') {
 		path[strlen(path)-1] = '\0';
 	}

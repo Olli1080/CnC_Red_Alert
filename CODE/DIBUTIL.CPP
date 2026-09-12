@@ -656,7 +656,7 @@ HDIB FAR BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
 
    /* if no palette is specified, use default palette */
    if (hPal == NULL)
-      hPal = GetStockObject(DEFAULT_PALETTE);
+      hPal = (HPALETTE)GetStockObject(DEFAULT_PALETTE);
 
    /* calculate bits per pixel */
    biBits = (WORD)( bm.bmPlanes * bm.bmBitsPixel );

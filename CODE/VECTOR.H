@@ -53,6 +53,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include "jshell.h"
 #ifdef NEVER
 #ifndef false
 #define false 0
@@ -64,9 +65,15 @@
 
 #include	<stdlib.h>
 #include	<stddef.h>
+#include	<new>
 
+// Placement new/new[] are standard (declared noexcept in <new>) on any modern compiler; this
+// hand-rolled redeclaration predates that standardization and, missing the noexcept the real one
+// now has, conflicts with it once <new> is included. Only needed for compilers old enough to lack it.
+#if defined(__WATCOMC__) || defined(__BORLANDC__)
 inline void * operator new(size_t , void * pointer) {return(pointer);}
 inline void * operator new[](size_t , void * pointer) {return(pointer);}
+#endif
 
 
 /**************************************************************************

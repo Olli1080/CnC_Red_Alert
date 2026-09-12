@@ -34,16 +34,26 @@
  *---------------------------------------------------------------------------------------------*
  * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
+
+#include "face.h"
+#include "defines.h"
+#include "noinit.h"
+// NOT function.h: that master header's own game-class list re-enters this file's own include
+// chain (a great many headers include abstract.h) before AbstractClass's body is complete,
+// leaving derived classes elsewhere seeing an incomplete AbstractClass. See GSCREEN.H's identical
+// note. Everything else this file needs (RTTIType, HousesType, FacingType, Build_Target, ...)
+// already comes from defines.h above.
 
 DirType Direction(CELL cell1, CELL cell2);
 DirType Direction(COORDINATE coord1, COORDINATE coord2);
 int Distance(COORDINATE coord1, COORDINATE coord2);
 COORDINATE As_Coord(TARGET target);
+CELL Coord_Cell(COORDINATE coord);
 
 class AbstractTypeClass;
+class MonoClass;
 
 /*
 **	This class is the base class for all game objects that have an existence on the

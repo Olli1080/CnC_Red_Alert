@@ -20,7 +20,7 @@
 #include "mgenord.h"
 #include "magic.h"
 #include "rtq.h"
-#include <mem.h>
+#include <string.h>
 #include <i86.h>
 #include <assert.h>
 #include "mplib.h"

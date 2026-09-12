@@ -591,7 +591,7 @@ void LoadOptionsClass::Clear_List(ListClass * list)
 	/*
 	** Clear the array of game numbers
 	*/
-	for (i = 0; i < Files.Count(); i++) {
+	for (int i = 0; i < Files.Count(); i++) {
 		delete Files[i];
 	}
 	Files.Clear();
@@ -620,7 +620,7 @@ void LoadOptionsClass::Fill_List(ListClass * list)
 	char descr[DESCRIP_MAX+32];
 	unsigned scenario;			// scenario #
 	HousesType house;				// house
-	struct find_t ff;		// for _dos_findfirst
+	struct _finddata_t ff;		// for _findfirst
 	int id;
 
 	/*
@@ -641,7 +641,8 @@ void LoadOptionsClass::Fill_List(ListClass * list)
 	/*
 	** Find all savegame files
 	*/
-	int rc = _dos_findfirst("SAVEGAME.*", _A_NORMAL, &ff);
+	intptr_t handle = _findfirst("SAVEGAME.*", &ff);
+	int rc = (handle == -1) ? -1 : 0;
 
 	while (!rc) {
 
@@ -682,14 +683,17 @@ void LoadOptionsClass::Fill_List(ListClass * list)
 			fdata->Scenario = scenario;
 			fdata->House = house;
 			fdata->Num = id;
-			fdata->DateTime = (((unsigned long)ff.wr_date) << 16) | (unsigned long)ff.wr_time;
+			fdata->DateTime = (unsigned long)ff.time_write;
 			Files.Add(fdata);
 		}
 
 		/*
 		** Find the next file
 		*/
-		rc = _dos_findnext(&ff);
+		rc = _findnext(handle, &ff);
+	}
+	if (handle != -1) {
+		_findclose(handle);
 	}
 
 	/*
@@ -702,7 +706,8 @@ void LoadOptionsClass::Fill_List(ListClass * list)
 		** in the list; if any number isn't found, use that number; otherwise,
 		** use 'N + 1'.
 		*/
-		for (int i = 0; i < Files.Count(); i++) {		// i = the # we're searching for
+		int i;
+		for (i = 0; i < Files.Count(); i++) {		// i = the # we're searching for
 			id = -1;											// mark as 'not found'
 			for (int j = 0; j < Files.Count(); j++) {	// loop through all game ID's
 				if (Files[j]->Num==i) {					// if found, mark as found

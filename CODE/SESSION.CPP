@@ -530,7 +530,7 @@ bool SessionClass::Am_I_Master(void)
  * HISTORY:                                                                *
  *   12/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-SessionClass::Save(Pipe & file) const
+int SessionClass::Save(Pipe & file) const
 {
 #ifdef FIXIT_MULTI_SAVE
 	file.Put(&CommProtocol, sizeof(CommProtocol));
@@ -572,7 +572,7 @@ SessionClass::Save(Pipe & file) const
  * HISTORY:                                                                *
  *   12/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-SessionClass::Load(Straw & file)
+int SessionClass::Load(Straw & file)
 {
 #ifdef FIXIT_MULTI_SAVE
 //	if(GameVersion != 0x0100616D){
@@ -619,7 +619,7 @@ SessionClass::Load(Straw & file)
  * HISTORY:                                                                *
  *   12/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-SessionClass::Save(CCFileClass & file)
+int SessionClass::Save(CCFileClass & file)
 {
 	int i;
 
@@ -666,7 +666,7 @@ SessionClass::Save(CCFileClass & file)
  * HISTORY:                                                                *
  *   12/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-SessionClass::Load(CCFileClass & file)
+int SessionClass::Load(CCFileClass & file)
 {
 	int count;
 	int i;
@@ -718,8 +718,6 @@ SessionClass::Load(CCFileClass & file)
  *=========================================================================*/
 void SessionClass::Read_MultiPlayer_Settings (void)
 {
-	char *tokenptr;						// ptr to token
-	PhoneEntryClass *phone;				// a phone book entry
 	char *entry;							// a phone book entry
 	char buf[128];							// buffer for parsing INI entry
 	int i;
@@ -735,11 +733,10 @@ void SessionClass::Read_MultiPlayer_Settings (void)
 	}
 	InitStrings.Clear();
 
-	//	Clear the dialing entries
-	for (i = 0; i < PhoneBook.Count(); i++) {
-		delete[] PhoneBook[i];
-	}
-	PhoneBook.Clear();
+	//	Clearing/reading of PhoneBook (the null-modem dialer's phone-book) removed below: it needs
+	//	PhoneEntryClass, declared in "phone.h", which genuinely does not exist anywhere in this GPL
+	//	release (see FUNCTION.H's own note on the same gap). Direct-dial modem multiplayer is dead
+	//	functionality regardless of toolchain - not worth reconstructing (unlike PaletteClass).
 
 	//	Create filename and read the file.
 	INIClass ini;
@@ -827,143 +824,7 @@ void SessionClass::Read_MultiPlayer_Settings (void)
 			SerialDefaults.InitStringIndex = 0;
 		}
 
-		//	Read the entry names in
-		int phonecount = ini.Entry_Count("PhoneBook");
-		for (index = 0; index < phonecount; index++) {
-			//	Create a new phone book entry
-			phone = new PhoneEntryClass();
-
-			//	Read the entire entry in
-			ini.Get_String("PhoneBook", ini.Get_Entry("PhoneBook", index), NULL, buf, sizeof(buf));
-
-			//	Extract name, phone # & serial port settings
-			tokenptr = strtok( buf, "|" );
-			if (tokenptr) {
-				strcpy( phone->Name, tokenptr );
-				strupr( phone->Name );
-			} else {
-				phone->Name[0] = 0;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				strcpy( phone->Number, tokenptr );
-				strupr( phone->Number );
-			} else {
-				phone->Number[0] = 0;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				sscanf( tokenptr, "%x", &phone->Settings.Port );
-			} else {
-				phone->Settings.Port = 0;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				phone->Settings.IRQ = atoi( tokenptr );
-			} else {
-				phone->Settings.IRQ = -1;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				phone->Settings.Baud = atoi( tokenptr );
-			} else {
-				phone->Settings.Baud = -1;
-			}
-
-			phone->Settings.Compression = 0;
-			phone->Settings.ErrorCorrection = 0;
-			phone->Settings.HardwareFlowControl = 1;
-
-			/*
-			** Find out if this phonebook entry has the new settings included. If not
-			** then we need to skip this section.
-			*/
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr){
-				strcpy( buf, tokenptr );
-
-				// find dial method
-
-				for (i = 0; i < DIAL_METHODS; i++) {
-					if ( !strcmpi( buf, DialMethodCheck[ i ]) ) {
-						/*
-						** This must be an old phonebook entry
-						*/
-						break;
-					}
-				}
-
-				/*
-				** Method wasnt found - assume its a new phonebook entry so get the extra settings
-				*/
-				// if method not found set to touch tone
-
-				if (i == DIAL_METHODS) {
-
-					phone->Settings.Compression = atoi( tokenptr );
-
-					tokenptr = strtok( NULL, "|" );
-					if (tokenptr) {
-						phone->Settings.ErrorCorrection = atoi( tokenptr );
-					}
-
-					tokenptr = strtok( NULL, "|" );
-					if (tokenptr) {
-						phone->Settings.HardwareFlowControl = atoi( tokenptr );
-					}
-
-					tokenptr = strtok( NULL, "|" );
-				}
-			}
-
-
-			if (tokenptr) {
-				strcpy( buf, tokenptr );
-
-				//	find dial method
-				for (i = 0; i < DIAL_METHODS; i++) {
-					if ( !strcmpi( buf, DialMethodCheck[ i ]) ) {
-						phone->Settings.DialMethod = (DialMethodType)i;
-						break;
-					}
-				}
-
-				//	if method not found set to touch tone
-				if (i == DIAL_METHODS) {
-					phone->Settings.DialMethod = DIAL_TOUCH_TONE;
-				}
-			} else {
-				phone->Settings.DialMethod = DIAL_TOUCH_TONE;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				phone->Settings.InitStringIndex = atoi( tokenptr );
-			} else {
-				phone->Settings.InitStringIndex = 0;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				phone->Settings.CallWaitStringIndex = atoi( tokenptr );
-			} else {
-				phone->Settings.CallWaitStringIndex = CALL_WAIT_CUSTOM;
-			}
-
-			tokenptr = strtok( NULL, "|" );
-			if (tokenptr) {
-				strcpy (phone->Settings.CallWaitString, tokenptr);
-			} else {
-				phone->Settings.CallWaitString[0] = 0;
-			}
-
-			//	Add it to our list
-			PhoneBook.Add(phone);
-		}
+		// PhoneBook reading removed - see the note above about the missing phone.h (PhoneEntryClass).
 
 		//	Read special recording playback values, to help find sync bugs
 		TrapFrame = ini.Get_Int("SyncBug", "Frame", 0x7fffffff);
@@ -1154,30 +1015,8 @@ void SessionClass::Write_MultiPlayer_Settings (void)
 			ini.Put_String("InitStrings", buf, InitStrings[index]);
 		}
 
-		//	Clear all existing Phone Book entries.
-		ini.Clear("PhoneBook");
-
-		//	Save all Phone Book entries.
-		//	Format: Entry=Name,PhoneNum,Port,IRQ,Baud,InitString
-		for (int i = (PhoneBook.Count() - 1); i >= 0; i--) {
-			char buf[128];
-			char entrytext[10];
-			sprintf(buf,"%s|%s|%x|%d|%d|%d|%d|%d|%s|%d|%d|%s",
-				PhoneBook[i]->Name,
-				PhoneBook[i]->Number,
-				PhoneBook[i]->Settings.Port,
-				PhoneBook[i]->Settings.IRQ,
-				PhoneBook[i]->Settings.Baud,
-				PhoneBook[i]->Settings.Compression,
-				PhoneBook[i]->Settings.ErrorCorrection,
-				PhoneBook[i]->Settings.HardwareFlowControl,
-				DialMethodCheck[ PhoneBook[i]->Settings.DialMethod ],
-				PhoneBook[i]->Settings.InitStringIndex,
-				PhoneBook[i]->Settings.CallWaitStringIndex,
-				PhoneBook[i]->Settings.CallWaitString);
-			sprintf( entrytext, "%03d", i );
-			ini.Put_String("PhoneBook", entrytext, buf);
-		}
+		// PhoneBook clearing/writing removed - see Read_MultiPlayer_Settings's note about the
+		// missing phone.h (PhoneEntryClass).
 
 		//	Write the INI data out to a file.
 		ini.Save(file);
@@ -1758,7 +1597,6 @@ unsigned long SessionClass::Compute_Unique_ID(void)
 {
 	time_t tm;
 	unsigned long id;
-	struct diskfree_t dtable;
 	char *path;
 	int i;
 
@@ -1771,11 +1609,14 @@ unsigned long SessionClass::Compute_Unique_ID(void)
 	//------------------------------------------------------------------------
 	// Now add in the free space on the hard drive
 	//------------------------------------------------------------------------
-	if (_dos_getdiskfree(3, &dtable) == 0) {
-		Add_CRC(&id, (unsigned long)dtable.avail_clusters);
-		Add_CRC(&id, (unsigned long)dtable.total_clusters);
-		Add_CRC(&id, (unsigned long)dtable.bytes_per_sector);
-		Add_CRC(&id, (unsigned long)dtable.sectors_per_cluster);
+	// _dos_getdiskfree(3, ...) (DOS-era <dos.h>) replaced with Win32's GetDiskFreeSpace on "C:\"
+	// (drive 3 in the old 1=A/2=B/3=C numbering).
+	DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;
+	if (GetDiskFreeSpace("C:\\", &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters)) {
+		Add_CRC(&id, (unsigned long)free_clusters);
+		Add_CRC(&id, (unsigned long)total_clusters);
+		Add_CRC(&id, (unsigned long)bytes_per_sector);
+		Add_CRC(&id, (unsigned long)sectors_per_cluster);
 	}
 
 	//------------------------------------------------------------------------

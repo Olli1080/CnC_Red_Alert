@@ -38,6 +38,8 @@
 #ifndef LAYER_H
 #define LAYER_H
 
+#include "pipe.h"
+#include "straw.h"
 #include "vector.h"
 
 class ObjectClass;

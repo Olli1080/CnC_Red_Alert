@@ -40,6 +40,8 @@
 #include "ipxaddr.h"
 #include "msglist.h"
 #include "connect.h"
+#include "event.h"
+#include "version.h"
 
 //---------------------------------------------------------------------------
 // Forward declarations

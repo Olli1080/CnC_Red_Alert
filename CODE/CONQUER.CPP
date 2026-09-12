@@ -3614,7 +3614,7 @@ Rect const Shape_Dimensions(void const * shapedata, int shapenum)
 	/*
 	**	Find bottom edge of the shape.
 	*/
-	for (y = ylimit; y >= rect.Y; y--) {
+	for (int y = ylimit; y >= rect.Y; y--) {
 		for (int x = xlimit; x >= 0; x--) {
 			if (shape[y*width + x] != 0) {
 				rect.Height = (y-rect.Y)+1;
@@ -3629,7 +3629,7 @@ Rect const Shape_Dimensions(void const * shapedata, int shapenum)
 	**	Find left edge of the shape.
 	*/
 	for (int x = 0; x < rect.X; x++) {
-		for (y = rect.Y; y < rect.Y+rect.Height; y++) {
+		for (int y = rect.Y; y < rect.Y+rect.Height; y++) {
 			if (shape[y*width + x] != 0) {
 				rect.X = x;
 				x = rect.X;
@@ -3641,8 +3641,8 @@ Rect const Shape_Dimensions(void const * shapedata, int shapenum)
 	/*
 	**	Find the right edge of the shape.
 	*/
-	for (x = width-1; x >= xlimit; x--) {
-		for (y = rect.Y; y < rect.Y+rect.Height; y++) {
+	for (int x = width-1; x >= xlimit; x--) {
+		for (int y = rect.Y; y < rect.Y+rect.Height; y++) {
 			if (shape[y*width + x] != 0) {
 				rect.Width = (x-rect.X)+1;
 				x = xlimit-1;
@@ -4533,7 +4533,7 @@ bool Force_CD_Available( int cd_desired )				//	ajw
 			if( cd_desired == CD_DVD )
 			{
 				#ifdef FRENCH
-			   	sprintf(buffer, "InsŠrez le %s",  _cd_name[4]);
+			   	sprintf(buffer, "Insï¿½rez le %s",  _cd_name[4]);
 				#else
 				#ifdef GERMAN
 				sprintf(buffer, "Bitte %s",  _cd_name[4]);
@@ -4545,7 +4545,7 @@ bool Force_CD_Available( int cd_desired )				//	ajw
 			else if( cd_desired == CD_COUNTERSTRIKE || cd_desired == CD_AFTERMATH )
 			{
 				#ifdef FRENCH
-			   	sprintf(buffer, "InsŠrez le %s",  _cd_name[cd_desired]);
+			   	sprintf(buffer, "Insï¿½rez le %s",  _cd_name[cd_desired]);
 				#else
 				#ifdef GERMAN
 				sprintf(buffer, "Bitte %s",  _cd_name[cd_desired]);
@@ -4929,7 +4929,7 @@ bool Force_CD_Available(int cd)
 			#endif
 
 				#ifdef FRENCH
-			   	sprintf(buffer, "InsŠrez le %s",  _cd_name[cd]);
+			   	sprintf(buffer, "Insï¿½rez le %s",  _cd_name[cd]);
 				#else
 				#ifdef GERMAN
 				sprintf(buffer, "Bitte %s",  _cd_name[cd]);
@@ -4942,7 +4942,7 @@ bool Force_CD_Available(int cd)
 				{
 				#ifdef DVD
 				#ifdef FRENCH
-			   	sprintf(buffer, "InsŠrez le %s", _cd_name[4]);
+			   	sprintf(buffer, "Insï¿½rez le %s", _cd_name[4]);
 				#else
 				#ifdef GERMAN 
 				sprintf(buffer, "Bitte %s", _cd_name[4]);
@@ -5066,13 +5066,14 @@ bool Force_CD_Available(int cd)
  *=========================================================================*/
 unsigned long Disk_Space_Available(void)
 {
-	struct diskfree_t diskdata;
-	unsigned drive;
+	// _dos_getdrive/_dos_getdiskfree (DOS-era <dos.h>) replaced with Win32's GetDiskFreeSpace,
+	// which reports on the current drive when given a NULL root path.
+	DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;
+	if (!GetDiskFreeSpace(NULL, &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters)) {
+		return(0);
+	}
 
-	_dos_getdrive(&drive);
-	_dos_getdiskfree(drive, &diskdata);
-
-	return(diskdata.avail_clusters * diskdata.sectors_per_cluster * diskdata.bytes_per_sector);
+	return((unsigned long)free_clusters * sectors_per_cluster * bytes_per_sector);
 }
 
 

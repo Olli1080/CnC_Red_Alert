@@ -59,12 +59,13 @@
 #define FTIMER_H
 
 
+#include "jshell.h"
 /*
 **	The "bool" integral type was defined by the C++ committee in
 **	November of '94. Until the compiler supports this, use the following
 **	definition.
 */
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined(_MSC_VER) && !defined(__cplusplus)
 #ifndef TRUE_FALSE_DEFINED
 #define TRUE_FALSE_DEFINED
 enum {false=0,true=1};

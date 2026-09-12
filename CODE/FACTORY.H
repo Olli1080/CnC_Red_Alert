@@ -38,6 +38,8 @@
 #ifndef FACTORY_H
 #define FACTORY_H
 
+#include "pipe.h"
+#include "straw.h"
 #include	"stage.h"
 
 class FactoryClass : private StageClass

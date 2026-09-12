@@ -38,6 +38,9 @@
 #ifndef MISSION_H
 #define MISSION_H
 
+#include "fixed.h"
+#include "ccini.h"
+#include "ftimer.h"
 #include "object.h"
 #include	"monoc.h"
 

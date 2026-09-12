@@ -38,6 +38,10 @@
 #ifndef UNIT_H
 #define UNIT_H
 
+#include "fixed.h"
+#include "ccini.h"
+#include "pipe.h"
+#include "straw.h"
 #include "drive.h"
 #include "radio.h"
 #include "cargo.h"

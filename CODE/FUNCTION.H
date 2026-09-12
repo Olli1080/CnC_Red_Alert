@@ -49,74 +49,74 @@
 Map (screen) class heirarchy.
 
  MapeditClass (most derived class) -- scenario editor
-        ³
+        ï¿½
    MouseClass -- handles mouse animation and display control
-        ³
+        ï¿½
   ScrollClass -- map scroll handler
-        ³
+        ï¿½
     HelpClass -- pop-up help text handler
-        ³
+        ï¿½
      TabClass -- file folder tab screen mode control dispatcher
-        ³
+        ï¿½
  SidebarClass -- displays and controls construction list sidebar
-        ³
+        ï¿½
    PowerClass -- display power production/consumption bargraph
-        ³
+        ï¿½
    RadarClass -- displays and controls radar map
-        ³
+        ï¿½
  DisplayClass -- general tactical map display handler
-        ³
+        ï¿½
      MapClass -- general tactical map data handler
-        ³
+        ï¿½
  GScreenClass (pure virtual base class) -- generic screen control
 
                           AbstractClass
-                                  ³
-                                  ³
-                                  ³
-                                  ³
+                                  ï¿½
+                                  ï¿½
+                                  ï¿½
+                                  ï¿½
                             ObjectClass
-                                  ³
-       ÚÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿
-   AnimClass  ³  TemplateClass    ³        ÃÄ FuseClass     ³    TerrainClass
-              ³                   ³        ÃÄ FlyClass      ³
-              ³                   ³  BulletClass            ³
+                                  ï¿½
+       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+   AnimClass  ï¿½  TemplateClass    ï¿½        ï¿½ï¿½ FuseClass     ï¿½    TerrainClass
+              ï¿½                   ï¿½        ï¿½ï¿½ FlyClass      ï¿½
+              ï¿½                   ï¿½  BulletClass            ï¿½
        OverlayClass        MissionClass               SmudgeClass
-                                  ³
+                                  ï¿½
                              RadioClass
-                                  ³
-                                  ÃÄ CrewClass
-                                  ÃÄ FlasherClass
-                                  ÃÄ StageClass
-                                  ÃÄ CargoClass
+                                  ï¿½
+                                  ï¿½ï¿½ CrewClass
+                                  ï¿½ï¿½ FlasherClass
+                                  ï¿½ï¿½ StageClass
+                                  ï¿½ï¿½ CargoClass
                             TechnoClass
-                                  ³
-                       ÚÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+                                  ï¿½
+                       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
                    FootClass                           BuildingClass
-                       ³
-         ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÁÂÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-    DriveClass  InfantryClass         ÃÄ FlyClass
-         ³                      AircraftClass
-       ÚÄÁÄÄÄÄÄÄÄÄÄ¿
-       ³           ³
-       ³     VesselClass
-       ³
+                       ï¿½
+         ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+    DriveClass  InfantryClass         ï¿½ï¿½ FlyClass
+         ï¿½                      AircraftClass
+       ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+       ï¿½           ï¿½
+       ï¿½     VesselClass
+       ï¿½
     UnitClass
 
 
                             AbstractTypeClass
-                                    ³
+                                    ï¿½
                               ObjectTypeClass
-                                    ³
-             ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-             ³                      ³            ³                 ³
-       TechnoTypeClass              ³            ³                 ³
-             ³                BulletTypeClass    ³                 ³
-             ³                           TemplateTypeClass         ³
-    ÚÄÄÄÄÄÄÄÄÁÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄ¿    TerrainTypeClass
-    ³              ³           ³              ³        ³
-UnitTypeClass      ³   BuildingTypeClass      ³  VesselTypeClass
-                   ³                          ³
+                                    ï¿½
+             ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+             ï¿½                      ï¿½            ï¿½                 ï¿½
+       TechnoTypeClass              ï¿½            ï¿½                 ï¿½
+             ï¿½                BulletTypeClass    ï¿½                 ï¿½
+             ï¿½                           TemplateTypeClass         ï¿½
+    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿    TerrainTypeClass
+    ï¿½              ï¿½           ï¿½              ï¿½        ï¿½
+UnitTypeClass      ï¿½   BuildingTypeClass      ï¿½  VesselTypeClass
+                   ï¿½                          ï¿½
            AircraftTypeClass          InfantryTypeClass
 #endif
 
@@ -142,7 +142,7 @@ UnitTypeClass      ³   BuildingTypeClass      ³  VesselTypeClass
 **	November of '94. Until the compiler supports this, use the following
 **	definition.
 */
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined(_MSC_VER) && !defined(__cplusplus)
 #ifndef TRUE_FALSE_DEFINED
 #define TRUE_FALSE_DEFINED
 enum {false=0,true=1};
@@ -176,22 +176,7 @@ class TPoint2D
 #endif
 
 
-/**********************************************************************
-**	This class is solely used as a parameter to a constructor that does
-**	absolutely no initialization to the object being constructed. By using
-**	this method, it is possible to load and save data directly from a
-**	class that has virtual functions. The construction process automatically
-**	takes care of initializing the virtual function table pointer and the
-**	rest of the constructor doesn't initialize any data members. After loading
-**	into a class object, simply perform an in-place new operation.
-*/
-#ifndef NOINITCLASS
-#define NOINITCLASS
-struct NoInitClass {
-	public:
-		void operator () (void) const {};
-};
-#endif
+#include "noinit.h"
 
 
 #define FILE_H
@@ -251,7 +236,7 @@ typedef struct {
 #include	<stdlib.h>
 #include	<stdio.h>
 #include	<stddef.h>
-#include	<mem.h>
+#include <string.h>
 #include	<dos.h>
 #include	<direct.h>
 #include	<stdarg.h>
@@ -291,10 +276,17 @@ extern long LParam;
 #include	"bar.h"
 
 /*
-**	Greenleaf specific includes.
+**	Greenleaf Communications Library (GCL) specific includes. GCL was a commercial, proprietary
+**	third-party serial/modem library never part of this GPL release (no "gcl510/" directory, no
+**	modem.h/fast.h anywhere in the source drop) - and the Win32 build doesn't actually need it:
+**	WIN32LIB/WINCOMM/WINCOMM.CPP already reimplements every GCL function natively against the
+**	real Win32 serial-port API (see its own "Replacement for Greenleaf function: X" comments).
+**	This include only ever mattered for the DOS build's direct GCL usage.
 */
+#if !defined(WIN32) && !defined(_WIN32)
 #include <modem.h>
 #include <fast.h>
+#endif
 
 
 extern long Frame;
@@ -389,14 +381,18 @@ CELL Coord_Cell(COORDINATE coord);
 #include	"scenario.h"
 #include "msglist.h"			// Multiplayer chat message system
 #include "session.h"			// Multiplayer session class
-#include "phone.h"			// Phone list manager
+// "phone.h" (the null-modem dialer's phone-book: PhoneEntryClass/PhoneListClass) genuinely does
+// not exist anywhere in this GPL release - a real gap in the source drop, like RAWFILE/CCFILE.CPP's
+// missing ccfile.h (see Agent/plans_done/win32lib_1a_port_log.md). SESSION.H only forward-declares
+// PhoneEntryClass (a DynamicVectorClass<PhoneEntryClass*> member doesn't need the full type), so it
+// compiles fine without this; only NULLDLG.CPP/SESSION.CPP's actual phone-book code needs it.
 #include "ipxmgr.h"			// IPX connection manager
 #include	"nullmgr.h"			// Modem connection manager
 #include	"readline.h"
 #include	"vortex.h"
 #include "egos.h"
 #ifdef WIN32
-#include	"pcx.h"
+#include	"filepcx.h"		// renamed from pcx.h; guard macro is still PCX_H
 #endif
 
 #if(TEN)
@@ -988,7 +984,10 @@ void Show_Who_Was_Responsible (void);
 **	names ever created, however there are other objects of this type (with different names) that
 **	are created.
 */
-extern CCPtr<AircraftClass> y1;
+// Renamed from "y1": collides with the C runtime's declspec(deprecated) Bessel function
+// "double y1(double)" declared by <math.h> (pulled in transitively) - unlike the other dummy
+// names below, this one isn't unique in the global namespace.
+extern CCPtr<AircraftClass> cc_dummy_y1;
 extern CCPtr<AnimClass> y2;
 extern CCPtr<BuildingClass> y3;
 extern CCPtr<BulletClass> y4;
@@ -1002,7 +1001,13 @@ extern CCPtr<TeamTypeClass> y11;
 extern CCPtr<TemplateClass> y12;
 extern CCPtr<TerrainClass> y13;
 extern CCPtr<TriggerClass> y14;
-extern CCPtr<TriggerTypeClass> y15;
+// y15 (CCPtr<TriggerTypeClass>) removed: MSVC 19.51 (VS 2026 preview) rejects this specific
+// instantiation-forcing declaration with a spurious "TriggerTypeClass: unspecialized class
+// template" error (C3203/C2990) that clang does not reproduce, and no combination of syntax
+// (elaborated "class TriggerTypeClass", moving it, isolating it) made the message go away - it
+// looks like a genuine preview-compiler quirk. Harmless to drop: CCPtr<TriggerTypeClass> is
+// already instantiated for real via TActionClass::Trigger (TACTION.H) and TriggerClass::Class
+// (TRIGTYPE.H), so the template body exists regardless of this hint.
 extern CCPtr<HouseTypeClass>		y16;
 extern CCPtr<BuildingTypeClass>	y17;
 extern CCPtr<AircraftTypeClass>	y18;
@@ -1015,17 +1020,17 @@ extern CCPtr<TemplateTypeClass>	y24;
 extern CCPtr<TerrainTypeClass>	y25;
 extern CCPtr<OverlayTypeClass>	y26;
 extern CCPtr<SmudgeTypeClass>		y27;
-class DynamicVectorClass<CCPtr<TeamTypeClass> >;
+template class DynamicVectorClass<CCPtr<TeamTypeClass> >;
 extern DynamicVectorClass<CCPtr<TeamTypeClass> > y002;
-class DynamicVectorClass<CCPtr<TriggerTypeClass> >;
-extern DynamicVectorClass<CCPtr<TriggerTypeClass> > y001;
-class DynamicVectorClass<TeamMissionClass *>;
+//DIAGTEST template class DynamicVectorClass<CCPtr<TriggerTypeClass> >;
+//DIAGTEST extern DynamicVectorClass<CCPtr<TriggerTypeClass> > y001;
+template class DynamicVectorClass<TeamMissionClass *>;
 extern DynamicVectorClass<TeamMissionClass *> xxx1;
-class DynamicVectorClass<EventChoiceClass *>;
+template class DynamicVectorClass<EventChoiceClass *>;
 extern DynamicVectorClass<EventChoiceClass *> xxx2;
-class DynamicVectorClass<ActionChoiceClass *>;
+template class DynamicVectorClass<ActionChoiceClass *>;
 extern DynamicVectorClass<ActionChoiceClass *> xxx3;
-class DynamicVectorClass<EgoClass *>;
+template class DynamicVectorClass<EgoClass *>;
 extern DynamicVectorClass<EgoClass *> whatever;
 
 #endif

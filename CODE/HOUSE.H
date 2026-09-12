@@ -38,6 +38,14 @@
 #ifndef HOUSE_H
 #define HOUSE_H
 
+#include "fixed.h"
+#include "ccini.h"
+#include "ftimer.h"
+#include "pipe.h"
+#include "straw.h"
+#include "utracker.h"
+#include "super.h"
+#include "object.h"
 #include	"type.h"
 #include	"region.h"
 #include	"vector.h"

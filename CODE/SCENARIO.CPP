@@ -557,7 +557,7 @@ void Fill_In_Data(void)
 	/*
 	**	Distribute the trigger pointers to the appropriate working lists.
 	*/
-	for (index = 0; index < TriggerTypes.Count(); index++) {
+	for (int index = 0; index < TriggerTypes.Count(); index++) {
 		TriggerTypeClass * tp = TriggerTypes.Ptr(index);
 
 		assert(tp != NULL);
@@ -610,7 +610,7 @@ void Fill_In_Data(void)
 	**	The "allow win" action is a special case that is handled here. The total number
 	**	of triggers that have this action must be recorded.
 	*/
-	for (index = 0; index < TriggerTypes.Count(); index++) {
+	for (int index = 0; index < TriggerTypes.Count(); index++) {
 		TriggerTypeClass * tp = TriggerTypes.Ptr(index);
 		if (tp->Action1.Action == TACTION_ALLOWWIN ||
 			(tp->ActionControl != MULTI_ONLY && tp->Action2.Action == TACTION_ALLOWWIN)) {
@@ -1315,11 +1315,11 @@ bool Restate_Mission(char const * name, int button1, int button2)
 #define	BUTTON_2		2
 #define	BUTTON_3		3
 #define	BUTTON_FLAG	0x8000
-bool BGMessageBox(char const * msg, int btn1, int btn2)
+int BGMessageBox(char const * msg, int btn1, int btn2)
 {
 #define BUFFSIZE 511
 	char buffer[BUFFSIZE];
-	bool retval;
+	int retval;
 	bool process;								// loop while true
 	KeyNumType input;							// user input
 	int selection;

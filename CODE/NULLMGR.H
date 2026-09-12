@@ -46,7 +46,12 @@
 */
 #include "nullconn.h"
 #include "connmgr.h"
+// commlib.h (Greenleaf Communications Library): see NULLCONN.H's note - genuinely absent from
+// this GPL release, and only the non-WIN32 "PORT *Port;" branch below actually needs its PORT
+// type (the WIN32 branch uses HANDLE; Abort_Modem's PORT* param was changed to void* above).
+#if !defined(WIN32) && !defined(_WIN32)
 #include "commlib.h"
+#endif
 
 /*
 ***************************** Class Declaration *****************************
@@ -161,7 +166,11 @@ class NullModemClass : public ConnManClass
 		void Remove_Modem_Echo(void);
 		void Print_EchoBuf(void);
 		void Reset_EchoBuf(void);
-		static int Abort_Modem(PORT *);
+		// PORT (Greenleaf Communications Library) is only available in the non-WIN32 build (see
+		// commlib.h note below); the parameter is unused in the WIN32 implementation and every
+		// caller casts Abort_Modem to a no-argument function pointer anyway (NULLMGR.CPP), so
+		// void* is a safe, behavior-preserving substitute that doesn't need GCL's type.
+		static int Abort_Modem(void *);
 		void Setup_Abort_Modem(void);
 		void Remove_Abort_Modem(void);
 

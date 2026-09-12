@@ -38,8 +38,15 @@
 #ifndef TEMPLATE_H
 #define TEMPLATE_H
 
+#include "pipe.h"
+#include "straw.h"
 #include	"object.h"
 #include	"type.h"
+
+// GameActive is declared in EXTERNS.H, but EXTERNS.H itself includes this file (for TemplateClass),
+// so including it back here would be circular. Declared directly instead - see RADIO.H's LParam
+// for the same pattern.
+extern bool GameActive;
 
 
 /******************************************************************************

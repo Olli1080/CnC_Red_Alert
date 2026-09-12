@@ -38,6 +38,7 @@
 #ifndef TECHNO_H
 #define TECHNO_H
 
+#include "fixed.h"
 #include	"radio.h"
 #include	"stage.h"
 #include	"cargo.h"

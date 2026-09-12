@@ -916,7 +916,7 @@ void VesselClass::Active_Click_With(ActionType action, CELL cell)
  * HISTORY:                                                                                    *
  *   05/13/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-ResultType VesselClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, int forced)
+ResultType VesselClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
 {
 	assert(Vessels.ID(this) == ID);
 	assert(IsActive);
@@ -2013,7 +2013,7 @@ void VesselClass::Read_INI(CCINIClass & ini)
 					}
 
 					if (vessel->Unlimbo(coord, dir)) {
-						vessel->Strength = vessel->Class->MaxStrength * fixed(strength, 256);
+						vessel->Strength = (int)vessel->Class->MaxStrength * fixed(strength, 256);
 						if (vessel->Strength > vessel->Class->MaxStrength-3) vessel->Strength = vessel->Class->MaxStrength;
 //						vessel->Strength = Fixed_To_Cardinal(vessel->Class->MaxStrength, strength);
 						if (Session.Type == GAME_NORMAL || vessel->House->IsHuman) {

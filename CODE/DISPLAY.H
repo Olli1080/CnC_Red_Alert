@@ -38,6 +38,7 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#include "gadget.h"
 #include	"map.h"
 #include	"layer.h"
 

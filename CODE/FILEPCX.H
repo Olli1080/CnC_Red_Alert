@@ -74,4 +74,7 @@ GraphicBufferClass* Read_PCX_File (char* name, char* palette= NULL,void *buff=NU
 GraphicBufferClass* Read_PCX_File (char* name, BufferClass& Buff,char* palette= NULL) ;
 int Write_PCX_File (char* name, GraphicViewPortClass& pic, unsigned char* palette );
 
+class PaletteClass;
+int Write_PCX_File (FileClass & file, GraphicBufferClass & pic, PaletteClass * palette);
+
 #endif

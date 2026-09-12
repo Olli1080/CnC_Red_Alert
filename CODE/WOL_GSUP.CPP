@@ -1050,7 +1050,8 @@ RESULT_WOLGSUP WOL_GameSetupDialog::Show()
 				if( *szScenarioDesc )
 				{
 					//	Language translation.
-					for (int ii = 0; EngMisStr[ii] != NULL;  ii++) {
+					int ii;
+				for (ii = 0; EngMisStr[ii] != NULL;  ii++) {
 						if (!strcmp( szScenarioDesc, EngMisStr[ii]) ) {
 							#if defined(GERMAN) || defined(FRENCH)
 								//sprintf(txt, "%s %s", Text_String(TXT_SCENARIO_COLON), EngMisStr[ii+1]);
@@ -3256,7 +3257,7 @@ void WOL_GameSetupDialog::TriggerGameStart( char* szGoMessage )
 	//	Also in this step - build the scenario download requests array (used by hosts only).
 	memset( Session.ScenarioRequests, 0, sizeof( Session.ScenarioRequests ) );
 	Session.RequestCount = 0;
-	for( iItem = 0; iItem < pILPlayers->Count(); iItem++ )
+	for( int iItem = 0; iItem < pILPlayers->Count(); iItem++ )
 	{
 		//	The following is not very efficient, but doesn't have to be. Better in this case to keep it clear and simple.
 		pWO->PullPlayerName_Into_From( szPlayerName, pILPlayers->Get_Item( iItem ) );

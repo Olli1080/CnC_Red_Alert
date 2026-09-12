@@ -650,7 +650,7 @@ void ChronalVortexClass::Attack(void)
 	int chance = Random_Pick (0, 1000);
 	if (chance > Frame - LastAttackFrame) return;
 
-	for (i= 0; i < Map.Layer[LAYER_GROUND].Count(); i++) {
+	for (int i= 0; i < Map.Layer[LAYER_GROUND].Count(); i++) {
 		ObjectClass * obj = Map.Layer[LAYER_GROUND][i];
 
 		if ( obj && obj->Is_Techno() ) {
@@ -1149,7 +1149,7 @@ void ChronalVortexClass::Setup_Remap_Tables (TheaterType theater)
 			file.Read (VortexRemapTables, MAX_REMAP_SHADES*256);
 		} else {
 
-			for (i=0 ; i<MAX_REMAP_SHADES ; i++) {
+			for (int i=0 ; i<MAX_REMAP_SHADES ; i++) {
 				Build_Fading_Table ( GamePalette, &VortexRemapTables[i][0], 0, 240- ((i*256)/MAX_REMAP_SHADES) );
 			}
 
@@ -1160,7 +1160,7 @@ void ChronalVortexClass::Setup_Remap_Tables (TheaterType theater)
 	/*
 	** Set up the remap table for the lightning
 	*/
-	for (i=0 ; i<256 ; i++) {
+	for (int i=0 ; i<256 ; i++) {
 		LightningRemap[i] = i;
 	}
 	LightningRemap[192] = 208;

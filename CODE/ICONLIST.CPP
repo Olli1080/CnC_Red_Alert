@@ -491,7 +491,7 @@ void IconListClass::Draw_Entry( int index, int x, int y, int width, int selected
 	}
 
 	//	Draw variable position left-of-text icons.
-	for( iIcon = 0; iIcon != 3; iIcon++ )
+	for( int iIcon = 0; iIcon != 3; iIcon++ )
 	{
 		if( pExtras->pIcon[ iIcon ] )
 		{

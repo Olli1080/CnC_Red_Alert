@@ -43,6 +43,10 @@
 class ObjectClass;
 class TechnoClass;
 
+// LParam is defined in FUNCTION.H; declared here too since it's used as a default argument value
+// below and this header must not depend on FUNCTION.H's own include order to see it.
+extern long LParam;
+
 
 /****************************************************************************
 **	Radio contact is controlled by this class. It handles the mundane chore

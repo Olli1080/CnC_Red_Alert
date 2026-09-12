@@ -586,7 +586,7 @@ void ScoreClass::Presentation(void)
 	total = min(total, 99999);
 
 Keyboard->Clear();
-	for (i = 0; i <= 130; i++) {
+	for (int i = 0; i <= 130; i++) {
 		Set_Font_Palette(_greenpal);
 		int lead = (leadership * i) / 100;
 		Count_Up_Print("%3d%%", lead, leadership,     244, 26);
@@ -735,7 +735,7 @@ Keyboard->Clear();
 		// hall of fame doesn't exist, so blank it out & write it
 		file.Open(WRITE);
 
-		for (i = 0; i < NUMFAMENAMES; i++) {
+		for (int i = 0; i < NUMFAMENAMES; i++) {
 			hallfame[i].name[0] =
 			hallfame[i].score   =
 			hallfame[i].level   = 0;
@@ -747,6 +747,7 @@ Keyboard->Clear();
 	}
 
 	file.Open(READ);
+	int index;
 	for (i = 0; i < NUMFAMENAMES; i++) {
 		file.Read(&hallfame[i], sizeof(struct Fame));
 	}
@@ -779,7 +780,7 @@ Keyboard->Clear();
 	char maststr[NUMFAMENAMES*32];
 #endif
 	char const *pal;
-	for (i = 0; i < NUMFAMENAMES; i++) {
+	for (int i = 0; i < NUMFAMENAMES; i++) {
 		pal = hallfame[i].side ? _redpal : _bluepal;
 		Alloc_Object(new ScorePrintClass(hallfame[i].name, HALLFAME_X, HALLFAME_Y + (i*8), pal));
 		if (hallfame[i].score) {
@@ -815,7 +816,7 @@ Keyboard->Clear();
 		Input_Name(hallfame[index].name, HALLFAME_X, HALLFAME_Y + (index*8), pal);
 
 		file.Open(WRITE);
-		for (i = 0; i < NUMFAMENAMES; i++) {
+		for (int i = 0; i < NUMFAMENAMES; i++) {
 			file.Write(&hallfame[i], sizeof(struct Fame));
 		}
 		file.Close();
@@ -828,7 +829,7 @@ Keyboard->Clear();
 	Keyboard->Clear();
 
 /* get rid of all the animating objects */
-	for (i = 0; i < MAXSCOREOBJS; i++) if (ScoreObjs[i]) {
+	for (int i = 0; i < MAXSCOREOBJS; i++) if (ScoreObjs[i]) {
 		delete ScoreObjs[i];
 		ScoreObjs[i] = 0;
 	}
@@ -952,7 +953,8 @@ void ScoreClass::Do_Nod_Buildings_Graph(void)
 	/*
 	** Here's the animation/draw loop for blowing up the factory
 	*/
-	for (int i=0; i<98; i++) {
+	int i;
+	for (i=0; i<98; i++) {
 		HidPage.Blit(HidPage, BUILDING_X, BUILDING_Y, 0, 0, 320-BUILDING_X, 48);
 		shapenum = 0;	// no damage
 		if (i >= 60) {
@@ -1084,7 +1086,7 @@ void ScoreClass::Do_GDI_Graph(void const * yellowptr, void const * redptr, int g
 	Set_Font_Palette(_bluepal);
 #endif
 
-	for (i = 1; i <= gdikilled; i++) {
+	for (int i = 1; i <= gdikilled; i++) {
 		if (i != gdikilled) {
 #ifdef WIN32
 			Set_Logic_Page(*PseudoSeenBuff);
@@ -1123,7 +1125,7 @@ void ScoreClass::Do_GDI_Graph(void const * yellowptr, void const * redptr, int g
 #else
 	Set_Font_Palette(_redpal);
 #endif
-	for (i = 1; i <= nodkilled; i++) {
+	for (int i = 1; i <= nodkilled; i++) {
 		if (i != nodkilled) {
 #ifdef WIN32
 			Set_Logic_Page(*PseudoSeenBuff);
@@ -1189,7 +1191,7 @@ void ScoreClass::Do_Nod_Casualties_Graph(void)
 	** graphs of casualties.
 	*/
 	int r = NUMINFANTRYMEN/2;
-	for (i = 0; i < NUMINFANTRYMEN/2; i++) {
+	for (int i = 0; i < NUMINFANTRYMEN/2; i++) {
 		InfantryMan[i+0].xpos =
 		InfantryMan[i+r].xpos =  (i*10) + 7;
 		InfantryMan[i+0].ypos = 11;
@@ -1215,7 +1217,7 @@ void ScoreClass::Do_Nod_Casualties_Graph(void)
 	HidPage.Blit(SeenPage, 0, 0, BARGRAPH_X, CASUALTY_Y, 320-BARGRAPH_X, 34);
 	Call_Back_Delay(40);
 
-	for (i = 1; i <= maxval; i++) {
+	for (int i = 1; i <= maxval; i++) {
 		// Draw & update infantrymen 3 times for every tick on the graph (i)
 		for (int index = 0; index < 3; index++) {
 			Draw_InfantryMen();
@@ -1857,7 +1859,7 @@ CopyType = 1;
 	** shown (which is known by Session.CurGame == MAX_MULTI_GAMES-1);
 	*/
 	if (Session.CurGame == MAX_MULTI_GAMES-1) {
-		for (i = 0; i < MAX_MULTI_NAMES; i++) {
+		for (int i = 0; i < MAX_MULTI_NAMES; i++) {
 			for (k = 0; k < MAX_MULTI_GAMES-1; k++) {
 				Session.Score[i].Kills[k] = Session.Score[i].Kills[k+1];
 			}
@@ -1865,7 +1867,7 @@ CopyType = 1;
 	}
 
 	int y = 41;
-	for (i = 0; i < MAX_MULTI_NAMES; i++) {
+	for (int i = 0; i < MAX_MULTI_NAMES; i++) {
 		if (strlen(Session.Score[i].Name)) {
 			int color = Session.Score[i].Color;
 			remap[ 8] = ColorRemaps[color].FontRemap[11];
@@ -1898,7 +1900,7 @@ CopyType = 1;
 	Cycle_Wait_Click(false);
 
 /* get rid of all the animating objects */
-	for (i = 0; i < MAXSCOREOBJS; i++) if (ScoreObjs[i]) {
+	for (int i = 0; i < MAXSCOREOBJS; i++) if (ScoreObjs[i]) {
 		delete ScoreObjs[i];
 		ScoreObjs[i] = 0;
 	}

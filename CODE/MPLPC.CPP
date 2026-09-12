@@ -22,7 +22,7 @@ extern "C" {
 #include "services.h"
 #include "rtq.h"
 #include <stdio.h>
-#include <mem.h>
+#include <string.h>
 };
 #include "mplib.h"
 

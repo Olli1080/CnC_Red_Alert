@@ -985,7 +985,7 @@ bool UnitClass::Unlimbo(COORDINATE coord, DirType dir)
  *   06/30/1995 JLB : Lasers do maximum damage against gunboat.                                *
  *   08/16/1995 JLB : Harvester crushing doesn't occur on early missions.                      *
  *=============================================================================================*/
-ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, int forced)
+ResultType UnitClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
 {
 	assert(Units.ID(this) == ID);
 	assert(IsActive);
@@ -1552,7 +1552,7 @@ bool UnitClass::Try_To_Deploy(void)
 					**	Force the newly placed construction yard to be in the same strength
 					**	ratio as the MCV that deployed into it.
 					*/
-					building->Strength = Health_Ratio() * building->Class->MaxStrength;
+					building->Strength = Health_Ratio() * (int)building->Class->MaxStrength;
 
 					/*
 					** Force the MCV to drop any flag it was carrying.  This will also set
@@ -4702,7 +4702,7 @@ void UnitClass::Read_INI(CCINIClass & ini)
 					}
 
 					if (unit->Unlimbo(coord, dir)) {
-						unit->Strength = unit->Class->MaxStrength * fixed(strength, 256);
+						unit->Strength = (int)unit->Class->MaxStrength * fixed(strength, 256);
 						if (unit->Strength > unit->Class->MaxStrength-3) unit->Strength = unit->Class->MaxStrength;
 						if (Session.Type == GAME_NORMAL || unit->House->IsHuman) {
 							unit->Assign_Mission(mission);

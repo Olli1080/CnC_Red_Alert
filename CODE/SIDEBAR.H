@@ -38,6 +38,10 @@
 #ifndef SIDEBAR_H
 #define SIDEBAR_H
 
+#include "pipe.h"
+#include "straw.h"
+#include "shapebtn.h"
+#include "gadget.h"
 #include	"function.h"
 #include	"power.h"
 #include	"factory.h"

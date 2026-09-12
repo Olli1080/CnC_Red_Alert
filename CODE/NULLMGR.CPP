@@ -56,7 +56,9 @@
 #include "modemreg.h"
 extern ModemRegistryEntryClass *ModemRegistry;
 #endif	//WIN32
+#ifndef WIN32
 #include "i86.h"
+#endif
 
 
 // Turn off "expression is not meaningful".
@@ -2335,7 +2337,7 @@ void NullModemClass::Reset_EchoBuf( void )
  * HISTORY:                                                                                    *
  *    8/2/96 12:52PM ST : Documented                                                           *
  *=============================================================================================*/
-int NullModemClass::Abort_Modem( PORT * )
+int NullModemClass::Abort_Modem( void * )
 {
 	/*
 	** Button Enumerations

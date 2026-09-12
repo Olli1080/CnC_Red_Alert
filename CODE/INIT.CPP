@@ -74,6 +74,7 @@
 #endif
 #include	<conio.h>
 #include	<dos.h>
+#include	<io.h>
 #ifndef WIN32
 #include	<sys\timeb.h>
 #endif
@@ -1569,7 +1570,7 @@ bool Select_Game(bool fade)
 						//ajw debugging only
 //						debugprint( "Debugging Session...\n" );
 //						debugprint( "Session.Players count is %i.\n", Session.Players.Count() );
-						for (i = 0; i < Session.Players.Count(); i++)
+						for (int i = 0; i < Session.Players.Count(); i++)
 						{
 							NetNumType net;
 							NetNodeType node;
@@ -2237,6 +2238,7 @@ long Obfuscate(char const * string)
 		if (((length+3) & 0x00FC) > maxlen) {
 			maxlen = ((length+3) & 0x00FC);
 		}
+		int index;
 		for (index = length; index < maxlen; index++) {
 			buffer[index] = 'A' + ((('?' ^ buffer[index-length]) + index) % 26);
 		}
@@ -2276,7 +2278,7 @@ long Obfuscate(char const * string)
 	**	cypher process occurs later.
 	*/
 	strrev(buffer);		// Restore original string order.
-	for (index = 0; index < length; index++) {
+	for (int index = 0; index < length; index++) {
 		code ^= (unsigned char)buffer[index];
 		unsigned char temp = (unsigned char)code;
 		buffer[index] ^= temp;
@@ -2289,7 +2291,7 @@ long Obfuscate(char const * string)
 	**	cryptographic attack engines. Since this also weakens the key against
 	**	unconventional attacks, the loss is limited to less than 10%.
 	*/
-	for (index = 0; index < length; index++) {
+	for (int index = 0; index < length; index++) {
 		static unsigned char _lossbits[] = {0x00,0x08,0x00,0x20,0x00,0x04,0x10,0x00};
 		static unsigned char _addbits[] = {0x10,0x00,0x00,0x80,0x40,0x00,0x00,0x04};
 
@@ -2306,7 +2308,7 @@ long Obfuscate(char const * string)
 	**	algorithm. The sheer workload of reversing this transformation should be enough
 	**	to discourage even the most determined hackers.
 	*/
-	for (index = 0; index < length; index += 4) {
+	for (int index = 0; index < length; index += 4) {
 		short key1 = buffer[index];
 		short key2 = buffer[index+1];
 		short key3 = buffer[index+2];
@@ -2568,7 +2570,7 @@ static void Init_Color_Remaps(void)
 		for (int index = 0; index < 16; index++) {
 			ptr[HidPage.Get_Pixel(index, 0)] = HidPage.Get_Pixel(index, pcolor);
 		}
-		for (index = 0; index < 6; index++) {
+		for (int index = 0; index < 6; index++) {
 			ColorRemaps[pcolor].FontRemap[10+index] = HidPage.Get_Pixel(2+index, pcolor);
 		}
 		ColorRemaps[pcolor].BrightColor = WHITE;
@@ -2726,22 +2728,28 @@ static void Init_Expansion_Files(void)
 
 	/*
 	**	Before all else, cache any additional mixfiles.
+	**	_dos_findfirst/_dos_findnext (DOS-era <dos.h>) replaced with their modern <io.h>
+	**	equivalents, _findfirst/_findnext/_findclose.
 	*/
-	struct find_t ff;		// for _dos_findfirst
-	if (!_dos_findfirst("SC*.MIX", _A_NORMAL, &ff)) {
+	struct _finddata_t ff;
+	intptr_t handle = _findfirst("SC*.MIX", &ff);
+	if (handle != -1) {
 		char * ptr;
 		do {
 			ptr = strdup(ff.name);
 			new MFCD(ptr, &FastKey);
 			MFCD::Cache(ptr);
-		} while (!_dos_findnext(&ff));
+		} while (_findnext(handle, &ff) == 0);
+		_findclose(handle);
 	}
-	if (!_dos_findfirst("SS*.MIX", _A_NORMAL, &ff)) {
+	handle = _findfirst("SS*.MIX", &ff);
+	if (handle != -1) {
 		char * ptr;
 		do {
 			ptr = strdup(ff.name);
 			new MFCD(ptr, &FastKey);
-		} while (!_dos_findnext(&ff));
+		} while (_findnext(handle, &ff) == 0);
+		_findclose(handle);
 	}
 }
 

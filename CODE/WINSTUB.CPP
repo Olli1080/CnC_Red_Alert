@@ -161,9 +161,9 @@ void Check_For_Focus_Loss(void)
 
 
 
-extern BOOL InMovie;
+extern bool InMovie;
 
-long FAR PASCAL _export Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lParam)
+LRESULT FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
 	int	low_param = LOWORD(wParam);
@@ -432,7 +432,7 @@ void WWDebugString (char *string)
 #endif
 
 
-void Create_Main_Window ( HANDLE instance , int command_show , int width , int height )
+void Create_Main_Window ( HINSTANCE instance , int command_show , int width , int height )
 
 {
 	HWND        	hwnd ;
@@ -494,7 +494,7 @@ width = width; height = height;
 }
 
 
-void Window_Dialog_Box(HANDLE  hinst, LPCTSTR  lpszTemplate, HWND  hwndOwner, DLGPROC  dlgprc)
+void Window_Dialog_Box(HINSTANCE  hinst, LPCTSTR  lpszTemplate, HWND  hwndOwner, DLGPROC  dlgprc)
 {
 	MSG					msg;
 	/*

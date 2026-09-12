@@ -465,7 +465,7 @@ OKExit:
 
 BOOL MyRead(int hFile, LPSTR lpBuffer, DWORD dwSize)
 {
-   char huge *lpInBuf = (char huge *)lpBuffer;
+   char *lpInBuf = (char *)lpBuffer;
    int nBytes;
 
    /*
@@ -505,7 +505,7 @@ BOOL MyRead(int hFile, LPSTR lpBuffer, DWORD dwSize)
 DWORD PASCAL MyWrite(int iFileHandle, VOID FAR *lpBuffer, DWORD dwBytes)
 {
    DWORD dwBytesTmp = dwBytes;       // Save # of bytes for return value
-   BYTE huge *hpBuffer = (BYTE huge *)lpBuffer;   // make a huge pointer to the data
+   BYTE *hpBuffer = (BYTE *)lpBuffer;   // make a huge pointer to the data
 
    /*
     * Write out the data in 32767 byte chunks.

@@ -38,7 +38,12 @@
 #ifndef GSCREEN_H
 #define GSCREEN_H
 
-#include	"function.h"
+#include "gadget.h"
+// NOT function.h: that master header's own game-class list eventually re-enters this file's own
+// include chain (gscreen.h -> function.h -> ... -> display.h -> map.h) before MAP_H's outer
+// entry ever reaches MapClass's own class body, so DisplayClass would see an incomplete MapClass.
+// TheaterType (used below) is all this file actually needs from that chain.
+#include	"defines.h"
 #include	"cell.h"
 
 class GScreenClass

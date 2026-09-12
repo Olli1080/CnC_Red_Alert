@@ -38,6 +38,9 @@
 #ifndef TYPE_H
 #define TYPE_H
 
+#include "fixed.h"
+#include "ccini.h"
+#include "rect.h"
 #include	"mission.h"
 #include	"target.h"
 

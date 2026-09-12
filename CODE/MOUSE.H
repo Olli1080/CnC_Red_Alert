@@ -38,6 +38,8 @@
 #ifndef MOUSE_H
 #define MOUSE_H
 
+#include "pipe.h"
+#include "straw.h"
 #include	"stage.h"
 #include	"scroll.h"
 

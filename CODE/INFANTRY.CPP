@@ -316,7 +316,7 @@ void InfantryClass::operator delete(void * ptr)
  *   11/22/1994 JLB : Shares base damage handler for techno objects.                           *
  *   03/31/1995 JLB : Revenge factor.                                                          *
  *=============================================================================================*/
-ResultType InfantryClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, int forced)
+ResultType InfantryClass::Take_Damage(int & damage, int distance, WarheadType warhead, TechnoClass * source, bool forced)
 {
 	assert(Infantry.ID(this) == ID);
 	assert(IsActive);
@@ -626,7 +626,7 @@ void InfantryClass::Per_Cell_Process(PCPType why)
 							tech->Captured(House);
 						} else {
 #ifdef FIXIT_ENGINEER	//	checked - ajw 9/28/98
-							int damage = min( (tech->Techno_Type_Class()->MaxStrength) * EngineerDamage, tech->Strength-1);
+							int damage = min( ((int)tech->Techno_Type_Class()->MaxStrength) * EngineerDamage, tech->Strength-1);
 #else
 							int damage = min( (tech->Techno_Type_Class()->MaxStrength) / 3, tech->Strength-1);
 #endif
@@ -1901,7 +1901,8 @@ void InfantryClass::Scatter(COORDINATE threat, bool forced, bool nokidding)
 
 		CELL newcell = 0;
 		CELL altcell = 0;
-		for (FacingType face = FACING_N; face < FACING_COUNT; face++) {
+		FacingType face;
+		for (face = FACING_N; face < FACING_COUNT; face++) {
 			FacingType newface = toface + face;
 			newcell = Adjacent_Cell(Coord_Cell(Coord), newface);
 
@@ -3374,7 +3375,7 @@ void InfantryClass::Read_INI(CCINIClass & ini)
 					}
 
 					if (infantry->Unlimbo(coord, dir)) {
-						infantry->Strength = infantry->Class_Of().MaxStrength * fixed(strength, 256);
+						infantry->Strength = (int)infantry->Class_Of().MaxStrength * fixed(strength, 256);
 						if (infantry->Strength > infantry->Class->MaxStrength-3) infantry->Strength = infantry->Class->MaxStrength;
 //						infantry->Strength = Fixed_To_Cardinal(infantry->Class_Of().MaxStrength, strength);
 						if (Session.Type == GAME_NORMAL || infantry->House->IsHuman) {

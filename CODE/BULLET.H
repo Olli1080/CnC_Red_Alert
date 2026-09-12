@@ -38,10 +38,14 @@
 #ifndef BULLET_H
 #define BULLET_H
 
+#include "pipe.h"
 #include "object.h"
 #include	"fly.h"
 #include	"fuse.h"
-
+#include "ccptr.h"
+#include "type.h"
+#include "facing.h"
+#include "straw.h"
 
 class BulletClass :	public ObjectClass,
 							public FlyClass,

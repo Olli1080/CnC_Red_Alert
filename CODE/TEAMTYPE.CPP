@@ -944,7 +944,7 @@ bool TeamTypeClass::Edit(void)
 		TPF_EFNT | TPF_NOSHADOW,
 		MFCD::Retrieve("EBTN-UP.SHP"),
 		MFCD::Retrieve("EBTN-DN.SHP"));
-	for (index = 0; index < MissionCount; index++) {
+	for (int index = 0; index < MissionCount; index++) {
 		missionlist2.Add_Item(new TeamMissionClass(MissionList[index]));
 //		missionlist2.Add_Item(&TeamMissions[MissionList[index].Mission]);
 	}
@@ -1333,7 +1333,7 @@ bool TeamTypeClass::Edit(void)
 				}
 
 				MissionCount = missionlist2.Count();
-				for (index = 0; index < MissionCount; index++) {
+				for (int index = 0; index < MissionCount; index++) {
 					MissionList[index].Data.Value = 0;				// Clears extra bits.
 					MissionList[index] = *missionlist2[index];
 				}
@@ -1767,7 +1767,7 @@ void TeamTypeClass::Fill_In(char * name, char * entry)
 	**	Fetch the missions assigned to this team type.
 	*/
 	MissionCount = atoi(strtok(NULL, ","));
-	for (index = 0; index < MissionCount; index++) {
+	for (int index = 0; index < MissionCount; index++) {
 		MissionList[index].Mission = TeamMissionType(atoi(strtok(NULL, ",:")));
 		MissionList[index].Data.Value = atoi(strtok(NULL, ",:"));
 	}
@@ -1870,7 +1870,7 @@ void TeamTypeClass::Build_INI_Entry(char * buf)
 	*/
 	sprintf(buf, ",%d", MissionCount);
 	buf += strlen(buf);
-	for (i = 0; i < MissionCount; i++) {
+	for (int i = 0; i < MissionCount; i++) {
 		sprintf (buf, ",%d:%d", MissionList[i].Mission, MissionList[i].Data.Value);
 		buf += strlen(buf);
 	}

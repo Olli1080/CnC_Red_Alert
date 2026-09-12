@@ -1367,7 +1367,7 @@ void WolapiObject::PullPlayerName_Into_From( char* szDest, const char* szSource 
 	//	Called "player" name because this is mainly designed for use in game channels.
 	//	Player name appears first in item, separated by a space from anything later.
 
-	char* pSpace = strstr( szSource, " " );
+	char const* pSpace = strstr( szSource, " " );
 	if( !pSpace )
 	{
 		//	No space character. Use entire item.	
@@ -1393,7 +1393,7 @@ HousesType WolapiObject::PullPlayerHouse_From( const char* szSource )
 //	++pChar;
 //	if( *pChar++ != '<' )		//	We know house has to be last, so if not the case, no house in item.
 //		return HOUSE_NONE;
-	char* pChar = strrchr( szSource, '<' );		//	Last < character.
+	char const* pChar = strrchr( szSource, '<' );		//	Last < character.
 	if( !pChar )
 		return HOUSE_NONE;
 	++pChar;
@@ -1703,7 +1703,7 @@ void WolapiObject::DoFindPage()
 	SimpleEditDlgClass* pFindPageDlg;
 
 	//	Ask user for user desired.
-	Fancy_Text_Print( TXT_NONE, 0, 0, TBLACK, TBLACK, TPF_TEXT );	//	Required before String_Pixel_Width() call, for god's sake.
+	Fancy_Text_Print(TXT_NONE, 0, 0, NULL, TBLACK, TPF_TEXT );	//	Required before String_Pixel_Width() call, for god's sake.
 	pFindPageDlg = new SimpleEditDlgClass( 400, TXT_WOL_PAGELOCATE, TXT_WOL_USERNAMEPROMPT, WOL_NAME_LEN_MAX );
 	pFindPageDlg->SetButtons( TXT_WOL_LOCATE, Text_String( TXT_CANCEL ), TXT_WOL_PAGE );
 	bPump_In_Call_Back = true;
@@ -2148,8 +2148,8 @@ bool WolapiObject::SpawnBrowser( const char* szURL )
 								NULL,			//	Thread handle not inheritable.
 								FALSE,			//	Set handle inheritance to FALSE.
 								0,				//	No creation flags.
-								NULL,			//	Use parent’s environment block.
-								NULL,			//	Use parent’s starting directory.
+								NULL,			//	Use parentï¿½s environment block.
+								NULL,			//	Use parentï¿½s starting directory.
 								&si,			//	Pointer to STARTUPINFO structure.
 								&pi ) )			//	Pointer to PROCESS_INFORMATION structure.
 		{
@@ -2338,7 +2338,7 @@ bool WolapiObject::EnterLevel_Games()
 	}
 
 	//	A pointer to the GameTypeInfos entry is stored in the item for convenience later.
-	for( i = 0; i < nGameTypeInfos - 2; i++ )
+	for( int i = 0; i < nGameTypeInfos - 2; i++ )
 	{
 		int iType = GameTypeInfos[ i ].iGameType;
 		if( iType != GAME_TYPE )		//	Else it is our game - skip it here since we put it at the top.
@@ -3397,7 +3397,7 @@ void RemapDIBToPalette( HPALETTE hPal, const char* pDIB )		//	Note: pDIB is trea
 	int iLength = iSrcPitch * iHeight;
 	unsigned char* pBits = (unsigned char*)FindDIBBits( pDIB );
 //	debugprint( "First Byte value %03u will become %03u\n", *pBits, qNewPalette[ *pBits ] );
-	for( i = 0; i != iLength; i++ )
+	for( int i = 0; i != iLength; i++ )
 	{
 		*pBits++ = qNewPalette[ *pBits ];
 	}

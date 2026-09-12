@@ -371,7 +371,10 @@ void FactoryClass::Decode_Pointers(void)
 		assert(Object != NULL);
 	}
 
-	((HouseClass *&)House) = HouseClass::As_Pointer((HousesType)House);
+	// (HousesType)House: reinterpret_cast can't shrink a pointer straight to a 4-byte enum on x64
+	// (this pointer-fixup encoding trick assumed 32-bit pointers); round-trip through intptr_t to
+	// keep the original truncating-cast behavior. The whole scheme needs revisiting for x64 saves.
+	((HouseClass *&)House) = HouseClass::As_Pointer((HousesType)(intptr_t)House);
 	assert(House != NULL);
 }
 

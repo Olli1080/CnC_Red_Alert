@@ -38,6 +38,7 @@
 #ifndef FOOT_H
 #define FOOT_H
 
+#include "fixed.h"
 #include	"target.h"
 #include	"type.h"
 #include	"techno.h"
@@ -64,7 +65,7 @@ class FootClass :	public TechnoClass
 		**	toggle when path limiting is true, but there is not target found within
 		**	the limited range.
 		*/
-		unsigned IsScanLimited:1;
+		mutable unsigned IsScanLimited:1;
 
 		/*
 		**	If this unit has officially joined the team's group, then this flag is

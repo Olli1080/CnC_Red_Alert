@@ -38,6 +38,8 @@
 #ifndef LINK_H
 #define LINK_H
 
+#include "noinit.h"
+
 
 /*
 **	This implements a simple linked list. It is possible to add, remove, and traverse the

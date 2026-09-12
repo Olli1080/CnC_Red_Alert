@@ -38,6 +38,9 @@
 #ifndef BUILDING_H
 #define BUILDING_H
 
+#include "pipe.h"
+#include "straw.h"
+#include "ccini.h"
 #include	"radio.h"
 #include	"cargo.h"
 #include	"mission.h"

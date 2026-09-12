@@ -37,7 +37,7 @@
  *= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =*/
 
 #include	"function.h"
-#include "pcx.h"
+#include "filepcx.h"		// renamed from pcx.h; guard macro is still PCX_H
 
 
 static void Write_Pcx_ScanLine(FileClass & file, int scansize, char * ptr);

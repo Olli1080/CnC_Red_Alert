@@ -40,6 +40,18 @@
 
 
 #include	<assert.h>
+#include	"noinit.h"
+
+// Get_Mouse_X/Get_Mouse_Y (used below) and WinTimerClass (used further down) come from WIN32LIB's
+// own mouse.h/timer.h - this file must not depend on some other includer having pulled those in
+// first.
+#include	<mouse.h>
+#include	<timer.h>
+
+// ShapeFlags_Type (used below) is declared in WIN32LIB's shape.h. FUNCTION.H's own include order
+// happens to reach this file (via CRATE.H) before it reaches shape.h elsewhere in its own list,
+// so this file must not rely on that order and needs its own explicit include.
+#include	<shape.h>
 
 #ifdef WIN32
 //#define getch	Get_Key_Num

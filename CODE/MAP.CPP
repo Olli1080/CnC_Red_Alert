@@ -528,7 +528,7 @@ void MapClass::Jam_From(CELL cell, int jamrange, HouseClass * house)
 				}
 			}
 		}
-		for (index = 0; index < Infantry.Count(); index++) {
+		for (int index = 0; index < Infantry.Count(); index++) {
 			InfantryClass * unit = Infantry.Ptr(index);
 			if (unit && !unit->IsInLimbo && unit->House == PlayerPtr) {
 				int dist = (unit->Distance(As_Target(cell))) / CELL_LEPTON_W;
@@ -537,7 +537,7 @@ void MapClass::Jam_From(CELL cell, int jamrange, HouseClass * house)
 				}
 			}
 		}
-		for (index = 0; index < Vessels.Count(); index++) {
+		for (int index = 0; index < Vessels.Count(); index++) {
 			VesselClass * unit = Vessels.Ptr(index);
 			if (unit && !unit->IsInLimbo && unit->House == PlayerPtr) {
 				int dist = (unit->Distance(As_Target(cell))) / CELL_LEPTON_W;
@@ -909,7 +909,7 @@ int MapClass::Write_Binary(Pipe & pipe)
 	}
 
 	cellptr = &Array[0];
-	for (i = 0; i < MAP_CELL_TOTAL; i++) {
+	for (int i = 0; i < MAP_CELL_TOTAL; i++) {
 		total += comp.Put(&cellptr->TIcon, sizeof(cellptr->TIcon));
 		cellptr++;
 	}
@@ -1016,7 +1016,8 @@ void MapClass::Logic(void)
 	*/
 	int subcount = MAP_CELL_TOTAL / (Rule.GrowthRate * TICKS_PER_MINUTE);
 	subcount = max(subcount, 1);
-	for (int index = TiberiumScan; index < MAP_CELL_TOTAL; index++) {
+	int index;
+	for (index = TiberiumScan; index < MAP_CELL_TOTAL; index++) {
 		CELL cell = index;
 		if (In_Radar(cell)) {
 			CellClass * ptr = &(*this)[cell];
@@ -1338,7 +1339,7 @@ if (BlubCell->Overlapper[1]) {
 		/*
 		**	Validate Overlappers
 		*/
-		for (i = 0; i < ARRAY_SIZE((*this)[cell].CellClass::Overlapper); i++) {
+		for (int i = 0; i < ARRAY_SIZE((*this)[cell].CellClass::Overlapper); i++) {
 			obj = (*this)[cell].Overlapper[i];
 			if (obj) {
 				if (
@@ -1617,7 +1618,7 @@ int MapClass::Zone_Span(CELL cell, int zone, MZoneType check)
 	**	end of the scan. This is necessary because diagonals are considered
 	**	adjacent.
 	*/
-	for (x = xbegin-1; x <= xend; x++) {
+	for (int x = xbegin-1; x <= xend; x++) {
 		filled += Zone_Span(XY_Cell(x, y-1), zone, check);
 		filled += Zone_Span(XY_Cell(x, y+1), zone, check);
 	}
@@ -1954,7 +1955,7 @@ bool MapClass::Destroy_Bridge_At(CELL cell)
 				  (cellptr->TType >= TEMPLATE_BRIDGE_3C && cellptr->TType <= TEMPLATE_BRIDGE_3E)) {
 					int x, y, tdata = 0;
 					for (y = 0; y < h; y++) {
-						for (x = 0; x < w; x++) {
+						for (int x = 0; x < w; x++) {
 							CellClass * ptr = &(*this)[(CELL)(cell + x)];
 							if (ptr->TType == cellptr->TType || ptr->Land_Type() == LAND_RIVER || ptr->Land_Type() == LAND_WATER) {
 								Detach_This_From_All(As_Target((CELL)(cell+tdata)), true);

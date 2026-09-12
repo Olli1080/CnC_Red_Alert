@@ -49,7 +49,13 @@
 ********************************* Includes **********************************
 */
 #include "connect.h"
+// commlib.h (Greenleaf Communications Library) only supplies the "PORT" type used by this file's
+// non-WIN32 branch below (the WIN32 branch uses a native HANDLE instead) - genuinely absent from
+// this GPL release, like FUNCTION.H's modem.h/fast.h (same GCL dependency, same reason it's safe
+// to drop for the Win32 build).
+#if !defined(WIN32) && !defined(_WIN32)
 #include "commlib.h"
+#endif
 
 /*
 ********************************** Defines **********************************

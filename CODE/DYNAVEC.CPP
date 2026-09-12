@@ -47,7 +47,7 @@
 #include	"WSProto.h"
 #include	"WSPUDP.h"
 #endif	//WINSOCK_IPX
-#include	<mem.h>
+#include <string.h>
 #include	<stdio.h>
 
 /***********************************************************************************************
