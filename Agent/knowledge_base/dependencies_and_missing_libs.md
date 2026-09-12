@@ -7,6 +7,8 @@ metadata:
 
 # Dependencies & Missing Libraries
 
+> This file covers what's needed to build the **original** 1996 Watcom/TASM toolchain as-is. For free/modern replacements researched toward a CMake+vcpkg modernized rebuild instead, see [modernization_options.md](modernization_options.md) and the active plan at [../plans_wip/modernization_cmake_vcpkg.md](../plans_wip/modernization_cmake_vcpkg.md).
+
 Per the root [README.md](../../README.md), rebuilding requires sourcing (or replacing/removing code that uses) these externally:
 
 ## DirectX 5 SDK
