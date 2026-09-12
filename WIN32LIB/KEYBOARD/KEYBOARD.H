@@ -114,7 +114,7 @@ class WWKeyboardClass
 		long				Tail;					// the tail position in keyboard buffer
 		int				MState;
 		int				Conditional;
-		HANDLE			CurrentCursor;
+		HCURSOR			CurrentCursor;
 };
 
 

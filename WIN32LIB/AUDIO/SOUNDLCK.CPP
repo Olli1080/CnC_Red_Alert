@@ -42,7 +42,7 @@
 #include <windowsx.h>
 #include <objbase.h>
 #include "dsound.h"
-#include <mem.h>
+#include <string.h>
 #include "wwmem.h"
 #include "wwstd.h"
 #include "soundint.h"

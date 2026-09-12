@@ -43,10 +43,20 @@
 //
 
 #ifndef WIN32
+#define WIN32 1
+#endif
 #ifndef _WIN32 // Denzil 6/2/98 Watcom 11.0 complains without this check
 #define _WIN32
 #endif // _WIN32
-#define WIN32 1
+
+// The original check here was "#ifndef WIN32" - a proxy for "has <windows.h> already been
+// included", which breaks under a modern CMake/MSBuild toolchain: MSBuild's default Win32
+// platform project predefines the WIN32 macro directly on the compiler command line (unrelated
+// to whether <windows.h> was ever actually #included), so that guard now always thinks windows.h
+// is already present and skips including it - leaving UINT/DWORD/etc. genuinely undefined when
+// later headers (e.g. KEYBOARD.H) need them. _WINDOWS_ is <windows.h>'s own real include guard,
+// so checking that instead is correct regardless of how/why WIN32 got defined.
+#ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h>
@@ -61,8 +71,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if !defined(_WIN32) && !defined(WIN32)
 #include <dos.h>
 #include <bios.h>
+#endif
 
 //================================
 
@@ -197,7 +209,17 @@ typedef void 	VOID;
 // WORD and UWORD should be an INT or UINT, especially on the stack and structures that will
 // not be in large arrays.  When size efficiency is more important then speed, use WORD UWORD.
 
-#define	VOID		void
+// VOID/BOOL and the basic integer aliases below are only meaningful when <windows.h> hasn't
+// already provided them (see the _WINDOWS_ include-guard fix above) - defining them
+// unconditionally would conflict with windows.h's own typedefs of the same names. Expressed as
+// typedefs rather than #define: a macro blindly replaces every later occurrence of the bare
+// token anywhere in the translation unit (including inside Windows SDK headers included
+// afterwards), which is exactly the class of bug this guard was added to prevent; a typedef is a
+// real, scoped type declaration that the compiler can check and safely re-declare identically.
+#ifndef _WINDOWS_
+typedef void VOID;
+typedef int BOOL;					// 32 bits for speed. use CHAR for size optimizations.
+#endif
 
 #pragma	warn -eas
 #define	TRUE		1
@@ -208,7 +230,7 @@ typedef void 	VOID;
 **	November of '94. Until the compiler supports this, use the following
 **	definition.
 */
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined(_MSC_VER) && !defined(__cplusplus)
 #ifndef TRUE_FALSE_DEFINED
 #define TRUE_FALSE_DEFINED
 enum {false=0,true=1};
@@ -218,25 +240,21 @@ typedef int bool;
 //#define	true		1
 //#define	false		0
 
-#define	BOOL		int					// 32 bits for speed. use CHAR for size optimizations.
-#if(0)
-#ifndef HMI_DRIVER
-#define	INT		int
-#define	UINT		unsigned int
-#define	BYTE		char
-#define	UBYTE		unsigned char
-#define  UCHAR	   unsigned char
-#define	WORD		signed 	short
-#define	UWORD		unsigned short
-#define  USHORT	unsigned short
+#if !defined(_WINDOWS_) && !defined(HMI_DRIVER)
+typedef int INT;
+typedef unsigned int UINT;
+typedef char BYTE;
+typedef unsigned char UBYTE;
+typedef unsigned char UCHAR;
+typedef short WORD;
+typedef unsigned short UWORD;
+typedef unsigned short USHORT;
 
-#define	LONG		signed 	long
-#define	ULONG		unsigned long
-#define  REALPTR	unsigned long
+typedef long LONG;
+typedef unsigned long ULONG;
+typedef unsigned long REALPTR;
 
-#define	FARPTR  char far *
-
-#endif
+typedef char far *FARPTR;
 #endif
 
 /*
@@ -249,7 +267,7 @@ typedef int bool;
 
 
 // Inline Routines
-//ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //
 // These Template functions are generally used
 // by classes when they havce over loaded > and <.

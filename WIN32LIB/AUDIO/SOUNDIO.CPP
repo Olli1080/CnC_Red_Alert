@@ -68,7 +68,7 @@ extern	void Colour_Debug (int call_number);
 #include	<windowsx.h>
 #include	"dsound.h"
 
-#include	<mem.h>
+#include	<string.h>
 #include	<wwmem.h>
 #include	"soundint.h"
 #include	<stdio.h>

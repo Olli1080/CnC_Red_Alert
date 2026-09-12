@@ -38,6 +38,12 @@ Structure follows [../knowledge_base/cmake_vcpkg_reference_patterns.md](../knowl
 - No source changes in this phase — it only needs to prove the build skeleton configures cleanly (an empty/stub target is fine).
 
 ### Phase 1 — Get it running (compatibility-shim path, x64, minimal source changes)
+Broken into sub-milestones (owner decision, 2026-09-12) rather than attempted as one push, starting with the library `CODE/` depends on before touching `CODE/` itself:
+- **1a. `WIN32LIB/` compiles standalone as a static library** — no game logic involved yet, just proving the support library itself builds under MSVC2026/x64/CMake. This is the current focus.
+- **1b. `CODE/` compiles and links against 1a's `WIN32LIB/`.**
+- **1c. The linked executable runs and reaches the original DirectDraw/audio/network call sites** — this is where the dxwrapper shim and the miniaudio swap actually get exercised for the first time.
+
+Sub-milestone 1a is scoped further below.
 This is the "immediate goal" milestone — get the existing engine running on modern x64 Windows with the smallest possible source footprint, deferring the real rendering/platform rewrite to Phase 4.
 - Wrap the **existing, unmodified** `WIN32LIB/MISC/DDRAW.CPP` DirectDraw calls with dgVoodoo2 or dxwrapper — no rendering code changes yet.
 - Replace `WIN32LIB/AUDIO/SOS*` with miniaudio or XAudio2 (unavoidable regardless of the rendering path — the original driver binary isn't available).

@@ -15,6 +15,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindDependencies.cmake")
 add_executable(phase0_smoke_test cmake/phase0_smoke_test.cpp)
 target_link_libraries(phase0_smoke_test PRIVATE Microsoft::DirectX-Headers)
 
+# Sub-milestone 1a: WIN32LIB compiling standalone (see Agent/plans_wip/modernization_cmake_vcpkg.md)
+add_subdirectory(WIN32LIB)
+
 if(BUILD_TESTS)
     enable_testing()
 endif()
