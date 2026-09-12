@@ -37,7 +37,7 @@
 #include <mmsystem.h>
 
 static WWMouseClass *_Mouse=NULL;
-void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD user, DWORD  res2, DWORD  res3 );
+void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD_PTR user, DWORD_PTR  res2, DWORD_PTR  res3 );
 extern BOOL GameInFocus;
 
 
@@ -612,7 +612,7 @@ void WWMouseClass::Get_Mouse_XY(int &x, int &y)
 
 #pragma off(unreferenced)
 
-void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD user, DWORD  res2, DWORD  res3 )
+void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD_PTR user, DWORD_PTR  res2, DWORD_PTR  res3 )
 {
 	static	BOOL	in_mouse_callback = false;
 

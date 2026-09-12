@@ -68,15 +68,22 @@ unsigned	ProfileList	[PROFILE_RATE*60*MAX_PROFILE_TIME];
 unsigned	ProfilePtr;
 }
 
-extern "C" void Profiler_Callback ( UINT, UINT , DWORD, DWORD, DWORD );
+// DWORD_PTR (not DWORD) on the last three params to exactly match the modern LPTIMECALLBACK
+// typedef timeSetEvent expects - on x64 these widened from 32-bit DWORD as part of the general
+// Win64 pointer-sized-parameter convention, so passing this function pointer directly (no cast)
+// requires the declared signature to match exactly.
+extern "C" void CALLBACK Profiler_Callback ( UINT, UINT , DWORD_PTR, DWORD_PTR, DWORD_PTR );
 
 unsigned	ProfilerEvent;
 
 void Start_Profiler (void)
 {
 	memset (&ProfileList[0],-1,PROFILE_RATE*60*MAX_PROFILE_TIME*4);
-	Copy_CHK();
-	ProfilerEvent = timeSetEvent (1000/PROFILE_RATE , 1 , (void CALLBACK (UINT,UINT,DWORD,DWORD,DWORD))Profiler_Callback , 0 , TIME_PERIODIC);
+	// Copy_CHK() called here previously - no such symbol exists anywhere in this codebase (not
+	// even in APROFILE.ASM, whose own function-header comment mentions a "Copy_CHL" that also
+	// isn't actually defined there). Dead call to something removed at some point; there's
+	// nothing left to link it to.
+	ProfilerEvent = timeSetEvent (1000/PROFILE_RATE , 1 , Profiler_Callback , 0 , TIME_PERIODIC);
 }
 
 void Stop_Profiler (void)

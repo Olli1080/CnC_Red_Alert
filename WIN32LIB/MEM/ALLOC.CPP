@@ -44,7 +44,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dos.h>
-#include <bios.h>
 
 
 #ifndef WWMEM_H

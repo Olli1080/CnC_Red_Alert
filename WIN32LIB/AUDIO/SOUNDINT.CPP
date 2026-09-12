@@ -54,7 +54,8 @@
 
 /*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =*/
 
-#pragma pack(4)
+// windows.h/windowsx.h/dsound.h must be included before any #pragma pack() changes take effect -
+// see the identical fix (and full rationale) in SOUNDIO.CPP.
 #define WIN32
 #ifndef _WIN32 // Denzil 6/2/98 Watcom 11.0 complains without this check
 #define _WIN32
@@ -62,12 +63,12 @@
 #include	<windows.h>
 #include	<windowsx.h>
 #include	"dsound.h"
+
+#pragma pack(4)
 #include	<wwstd.h>
 #include "soundint.h"
 #include "memflag.h"
 #include "audio.h"
-
-extern	DebugBuffer[];
 
 /***************************************************************************
 ** All routines past this point must be locked for the sound driver to	  **
@@ -275,7 +276,7 @@ extern int Convert_HMI_To_Direct_Sound_Volume(int volume);
  *     ....Unknown                                                                             *
  *    10/17/95 10:15PM ST : tidied up a tad for direct sound                                   *
  *=============================================================================================*/
-VOID far __cdecl maintenance_callback(VOID)
+VOID __cdecl maintenance_callback(VOID)
 {
 
 	int					index;				//index used in for loop

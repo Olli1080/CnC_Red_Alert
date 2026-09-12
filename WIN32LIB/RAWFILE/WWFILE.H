@@ -40,6 +40,16 @@
 
 #include	<stdio.h>
 
+// _READ/_WRITE were expected to come from the old Watcom runtime's <fcntl.h> as low-level
+// open-mode bit flags; MSVC's CRT never provided them under these names (its equivalents are
+// _O_RDONLY/_O_WRONLY, with different values), so nothing in this tree ever actually defined
+// them. Combined bitwise below (e.g. "case READ|WRITE:"), so they need distinct bit values.
+#ifndef _READ
+#define _READ	1
+#endif
+#ifndef _WRITE
+#define _WRITE	2
+#endif
 #ifndef READ
 #define	READ	_READ
 #endif

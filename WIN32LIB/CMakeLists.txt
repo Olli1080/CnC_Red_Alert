@@ -31,6 +31,32 @@ endforeach()
 # "fixed" into something it was never meant to be.
 list(REMOVE_ITEM WIN32LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/AUDIO/TST.CPP")
 
+# PLAYCD/REDBOOK.CPP implements methods of RedBookClass, but that class is declared only inside
+# PLAYCD.H's "#ifdef NOT_FOR_WIN95" block (DOS real-mode DPMI code: SEGSEL, DPMI_real_alloc,
+# union REGS) - a macro this Win32 build never defines. Nothing else in WIN32LIB references
+# RedBookClass, so this file was never actually part of the live Win32 library either; excluded
+# rather than resurrecting DPMI/real-mode plumbing we've already decided to drop entirely (see
+# Agent/knowledge_base/modernization_options.md).
+list(REMOVE_ITEM WIN32LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/PLAYCD/REDBOOK.CPP")
+
+# RAWFILE/CCFILE.CPP #includes "ccfile.h", which genuinely does not exist anywhere in this GPL
+# release (checked, including SRCDEBUG/ and every OLD/ copy) - a real gap in the source drop, not
+# a bug to fix here. CODE/ has its own separate CCFILE.H/CCFileClass (see
+# Agent/project_state/modules/code/file_io_compression_saveload.md) but its member layout hasn't
+# been verified compatible with what this file implements, so borrowing it blind would risk
+# silently-wrong behavior. Excluded for now; revisit once CODE/ integration (sub-milestone 1b)
+# clarifies how CCFileClass is actually used and whether reconstructing/sharing a header is safe.
+list(REMOVE_ITEM WIN32LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/RAWFILE/CCFILE.CPP")
+
+# PROFILE/PROFILE.CPP and PROFILE/WPROFILE.CPP both define identical Start_Profiler(void)/
+# Stop_Profiler(void) functions - proven mutually-exclusive alternate implementations, never
+# meant to link into the same binary (a genuine ODR violation if both were kept). WPROFILE.CPP's
+# callbacks (Old_Profiler_Callback/New_Profiler_Callback) match real ASM-defined symbols in
+# APROFILE.ASM; PROFILE.CPP's own callback ("Profiler_Callback") and its "Copy_CHK()" call match
+# nothing anywhere in the tree. WPROFILE.CPP is the real, live Windows implementation; PROFILE.CPP
+# is excluded as the stale/superseded one.
+list(REMOVE_ITEM WIN32LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/PROFILE/PROFILE.CPP")
+
 add_library(win32lib STATIC ${WIN32LIB_SOURCES})
 
 # INCLUDE/ must come first: several modules (e.g. MISC/) carry stale duplicate copies of shared

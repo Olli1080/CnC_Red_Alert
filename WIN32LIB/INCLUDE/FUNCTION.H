@@ -21,24 +21,29 @@
 /* The following prototypes are for the file: SOUNDIO.CPP						*/
 /*=========================================================================*/
 
+// _saveregs/_loadds/far were Watcom calling-convention/segment-attribute keywords for 16-bit
+// real-mode interrupt handlers; meaningless (and not recognized at all) under Win32/x64, where
+// there's no such thing as a "far" pointer or a manually-loaded data segment. Stripped from
+// these prototypes and from maintenance_callback's actual definition in SOUNDINT.CPP, which
+// used the same now-removed qualifiers.
 short Decompress_Frame(void * source, void * dest, short size);
-int __cdecl Stream_Sample_Vol(void *buffer, long size, BOOL (*callback);
-int __cdecl Stream_Sample(void *buffer, long size, BOOL (*callback);
+int __cdecl Stream_Sample_Vol(void *buffer, long size, bool (*callback));
+int __cdecl Stream_Sample(void *buffer, long size, bool (*callback));
 int __cdecl File_Stream_Sample(char const *filename);
 int __cdecl File_Stream_Sample_Vol(char const *filename, int volume);
-void __cdecl _saveregs _loadds Sound_Callback(void);
-void __cdecl far _saveregs _loadds maintenance_callback(void);
+void __cdecl Sound_Callback(void);
+void __cdecl maintenance_callback(void);
 void  __cdecl Load_Sample(char const *filename);
 long __cdecl Load_Sample_Into_Buffer(char const *filename, void *buffer, long size);
 long __cdecl Sample_Read(int fh, void *buffer, long size);
 void __cdecl Free_Sample(void const *sample);
-BOOL __cdecl Sound_Init(int sfx, int score, int sample);
-void far VQA_TimerCallback(void);
-BOOL Audio_Init(int sample, int address, int inter, int dma);
+bool __cdecl Sound_Init(int sfx, int score, int sample);
+void VQA_TimerCallback(void);
+bool Audio_Init(int sample, int address, int inter, int dma);
 void __cdecl Sound_End(void);
 void __cdecl Stop_Sample(int handle);
-BOOL __cdecl Sample_Status(int handle);
-BOOL __cdecl Is_Sample_Playing(void const * sample);
+bool __cdecl Sample_Status(int handle);
+bool __cdecl Is_Sample_Playing(void const * sample);
 void __cdecl Stop_Sample_Playing(void const * sample);
 int __cdecl Play_Sample(void const *sample);
 int __cdecl Play_Sample_Vol(void const *sample, int priority, int volume);

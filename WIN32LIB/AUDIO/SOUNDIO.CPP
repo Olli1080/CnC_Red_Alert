@@ -57,8 +57,13 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 extern	void Colour_Debug (int call_number);
-#pragma 	pack(4)
 
+// windows.h/windowsx.h/dsound.h must be included before any #pragma pack() changes take effect:
+// modern Windows SDK headers static_assert that LARGE_INTEGER's alignment matches the *default*
+// packing, so their first inclusion in this translation unit has to happen under unmodified
+// packing. Later includes of windows.h elsewhere in this file (e.g. via audio.h -> wwstd.h) are
+// harmless no-ops thanks to its own _WINDOWS_ include guard, so this doesn't affect the pack(4)/
+// pack(1) pairs below, which still apply to everything that follows as originally intended.
 #define WIN32
 #ifndef _WIN32 // Denzil 6/2/98 Watcom 11.0 complains without this check
 #define _WIN32
@@ -67,6 +72,8 @@ extern	void Colour_Debug (int call_number);
 #include	<windows.h>
 #include	<windowsx.h>
 #include	"dsound.h"
+
+#pragma 	pack(4)
 
 #include	<string.h>
 #include	<wwmem.h>
@@ -78,7 +85,6 @@ extern	void Colour_Debug (int call_number);
 #include <process.h>
 #include	<keyboard.h>
 #include	<file.h>
-#include	<bios.h>
 #include	<timer.h>
 #include	<math.h>
 #pragma		pack(1)
@@ -156,7 +162,7 @@ extern	void (*Audio_Focus_Loss_Function)(void) = NULL;
 
 static BOOL File_Callback(short id, short *odd, void **buffer, long *size);
 static int __cdecl Stream_Sample_Vol(void *buffer, long size, BOOL (*callback)(short id, short *odd, void **buffer, long *size), int volume, int handle);
-void CALLBACK Sound_Timer_Callback ( UINT, UINT, DWORD, DWORD, DWORD );
+void CALLBACK Sound_Timer_Callback ( UINT, UINT, DWORD_PTR, DWORD_PTR, DWORD_PTR );
 //static int __cdecl Stream_Sample(void *buffer, long size, BOOL (*callback)(short id, short *odd, void **buffer, long *size));
 void Sound_Thread (void *);
 volatile BOOL AudioDone;
@@ -435,7 +441,8 @@ void File_Stream_Preload(int handle)
     /*
     ** Loop through the blocks and load up the number we need.
     */
-    for (int index = st->FilePending; index < num; index++) {
+    int index;
+    for (index = st->FilePending; index < num; index++) {
 		long s = Read_File(fh, Add_Long_To_Pointer(buffer, (long)index * (long)LockedData.StreamBufferSize), LockedData.StreamBufferSize);
        if (s) {
          	st->FilePendingSize = s;
@@ -890,7 +897,7 @@ void Free_Sample(void const *sample)
  *    11/2/95 4:01PM ST : Created                                                              *
  *=============================================================================================*/
 
-void CALLBACK Sound_Timer_Callback ( UINT, UINT, DWORD, DWORD, DWORD )
+void CALLBACK Sound_Timer_Callback ( UINT, UINT, DWORD_PTR, DWORD_PTR, DWORD_PTR )
 {
 	//if (!InTimerCallback){
 		//InTimerCallback++;

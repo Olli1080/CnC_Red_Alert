@@ -71,7 +71,7 @@ CountDownTimerClass		CountDown(BT_SYSTEM, 0);
 
 
 // Prototype for timer callback
-void CALLBACK Timer_Callback ( UINT event_id, UINT res1 , DWORD user, DWORD  res2, DWORD  res3 );
+void CALLBACK Timer_Callback ( UINT event_id, UINT res1 , DWORD_PTR user, DWORD_PTR  res2, DWORD_PTR  res3 );
 
 HANDLE	TimerThreadHandle = 0;		//Handle of timer thread
 int		InTimerCallback	= 0;		//Flag to say if we are in a timer callback
@@ -181,7 +181,7 @@ WinTimerClass::~WinTimerClass( void )
  *=============================================================================================*/
 
 
-void CALLBACK Timer_Callback (UINT , UINT , DWORD , DWORD , DWORD)
+void CALLBACK Timer_Callback (UINT , UINT , DWORD_PTR , DWORD_PTR , DWORD_PTR)
 {
 	//CONTEXT	context;
 

@@ -133,7 +133,7 @@ CONTEXT	ThreadContext;
  *    1/2/96 6:37AM ST : Created                                                               *
  *=============================================================================================*/
 
-void CALLBACK Thread_Callback (UINT,UINT,DWORD,DWORD,DWORD)
+void CALLBACK Thread_Callback (UINT,UINT,DWORD_PTR,DWORD_PTR,DWORD_PTR)
 {
 	ThreadContext.ContextFlags = VDMCONTEXT_CONTROL;
 	if (!InTimerCallback){
@@ -142,7 +142,11 @@ void CALLBACK Thread_Callback (UINT,UINT,DWORD,DWORD,DWORD)
 		GetThreadContext (TimerThreadHandle , &ThreadContext);
 	}
 
-	ProfileFunctionAddress = ThreadContext.Eip;
+	// CONTEXT::Eip (x86 instruction pointer) doesn't exist on x64; the equivalent field is Rip.
+	// Note this truncates on x64 (ProfileFunctionAddress is a 32-bit "unsigned") - fine for now
+	// since this dev-only profiler tool isn't part of the compile-error-fixing scope, but worth
+	// widening if the profiler is ever actually used to sample x64 addresses.
+	ProfileFunctionAddress = (unsigned)ThreadContext.Rip;
 	New_Profiler_Callback();
 }
 
