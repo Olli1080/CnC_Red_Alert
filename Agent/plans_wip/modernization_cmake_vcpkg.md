@@ -20,29 +20,47 @@ Based on [../project_state/overview.md](../project_state/overview.md) and [../kn
 - **Excluded entirely**: `WWFLAT32/` (DOS-extender predecessor already superseded by `WIN32LIB/` for the Windows build — carrying it forward would mean porting real-mode/DPMI code that has to be deleted anyway), `IPX/` (16-bit thunk DLLs cannot run on 64-bit Windows at all — replace with the existing `TCPIP.CPP`/`WSPUDP.*` socket path instead), `LAUNCH/` (DOS pre-launch memory/disk-space stub — meaningless on modern Windows).
 - **Deferred, not blocking**: `LAUNCHER/` (Win32 patch launcher — small, self-contained, can move to CMake independently later), `TOOLS/` (dev-only asset tools — only needed if rebuilding/modifying game asset files, not for running the game).
 
+## Architecture decisions (resolved 2026-09-12 — see [../knowledge_base/modernization_options.md](../knowledge_base/modernization_options.md) for full reasoning)
+1. **ASM**: kept for now (UASM-assembled); C++ rewrite of hot paths is deferred/backlog, not blocking.
+2. **Target**: **x64 only** — x86/Win32 dropped entirely, not kept as a secondary target.
+3. **Rendering — two horizons**: near-term = DirectDraw compatibility shim (dgVoodoo2 or [dxwrapper](https://github.com/elishacloud/dxwrapper)) to get the game running fastest; long-term (the actual "modernization + cross-platform" goal) = native rewrite on **SDL3** (windowing/input/audio/events) + **two separately hand-rolled backends, Vulkan and Direct3D 12** — explicitly **not** SDL3's `SDL_GPU` abstraction (owner's call: considered buggy/immature).
+4. **Video codec base**: `VQ/VQA32`, not `WINVQ/VQA32` (identical core codec either way; `VQ/` is what `CODE/` already calls into and carries no unneeded tooling).
+5. **Dear ImGui** for developer/debug tooling and likely the map-editor UI (not the in-game HUD, which keeps its original pixel-art widget rendering) — lands in the long-term rendering phase (needs a real Vulkan/D3D12 context), using its official `imgui_impl_sdl3` + `imgui_impl_vulkan`/`imgui_impl_dx12` backends, available via vcpkg's `imgui` port.
+
 ## Phased approach
 
 ### Phase 0 — Repo/build skeleton
-- Add `vcpkg` as a git submodule at the repo root (`vcpkg/`), with a `vcpkg.json` manifest declaring dependencies as they're identified. Expected candidates: `directx-headers` (and possibly `directx-agility-sdk`), `sdl2` or `openal-soft` *only if* the cross-platform/OpenAL route is chosen over miniaudio/XAudio2 in Phase 1 — miniaudio itself is more likely vendored directly as a single header than pulled via vcpkg, since that's its intended usage model.
-- Root `CMakeLists.txt` wiring the vcpkg toolchain file (`vcpkg/scripts/buildsystems/vcpkg.cmake`) and a `CMakePresets.json` targeting the VS2026/MSVC generator.
+- Add `vcpkg` as a git submodule at the repo root (`vcpkg/`), with a `vcpkg.json` manifest declaring dependencies as they're identified. Expected candidates: `directx-headers`, and later (Phase 4) `imgui` with its SDL3/Vulkan/DX12 binding features — exact feature-flag names to verify against the current port when reached. `sdl2`/`openal-soft` are **not** needed for Phase 1-3 (miniaudio is vendored directly as a single header per its intended usage model; SDL3 doesn't enter until Phase 4).
+- Root `CMakeLists.txt` wiring the vcpkg toolchain file (`vcpkg/scripts/buildsystems/vcpkg.cmake`) and a `CMakePresets.json` targeting the **x64** VS2026/MSVC generator only (no 32-bit configuration).
 - No source changes in this phase — it only needs to prove the build skeleton configures cleanly (an empty/stub target is fine).
 
-### Phase 1 — Platform-layer replacement (the actual hard part)
-**Blocked on resolving the four open decisions in [../knowledge_base/modernization_options.md](../knowledge_base/modernization_options.md)** (ASM vs. C++ rewrite, x86 vs. x64, rendering-layer target, VQ vs. WINVQ base) — each significantly changes how much of `WIN32LIB/` gets rewritten vs. wrapped, so don't start writing code here until those are picked.
-- Replace `WIN32LIB/MISC/DDRAW.CPP` per the chosen rendering strategy (compatibility shim, or native D3D11/D3D12 rewrite).
-- Replace `WIN32LIB/AUDIO/SOS*` with miniaudio or XAudio2.
-- Replace `WIN32LIB/MOVIE/`'s DirectShow calls with Media Foundation, only if that FMV path is still wanted (the primary cutscene path is the unrelated custom VQA codec).
+### Phase 1 — Get it running (compatibility-shim path, x64, minimal source changes)
+This is the "immediate goal" milestone — get the existing engine running on modern x64 Windows with the smallest possible source footprint, deferring the real rendering/platform rewrite to Phase 4.
+- Wrap the **existing, unmodified** `WIN32LIB/MISC/DDRAW.CPP` DirectDraw calls with dgVoodoo2 or dxwrapper — no rendering code changes yet.
+- Replace `WIN32LIB/AUDIO/SOS*` with miniaudio or XAudio2 (unavoidable regardless of the rendering path — the original driver binary isn't available).
+- Replace `VQ/`'s (not `WINVQ/`'s) audio/timer plumbing in `VQA32/AUDIO.CPP` to match whatever driver replaces SOS.
 - Drop `WINCOMM`'s legacy `NOT_FOR_WIN95`-guarded paths and the null-modem multiplayer mode entirely (`NULLCONN`, `MPMGRD`).
+- Drop `IPX/`'s 16-bit thunk DLLs and `CODE/IPX*.CPP`; multiplayer networking goes through the existing `CODE/TCPIP.CPP`/`WSPUDP.*` socket path instead.
+- Drop `CODE/DPMI.CPP` and exclude `WWFLAT32/` from the build entirely (superseded by `WIN32LIB/`, and its DPMI/real-mode code has no meaning on x64 Windows regardless).
+- Build and run as **x64 only** throughout — no x86 configuration to maintain.
 
 ### Phase 2 — Toolchain migration for what's kept
-- If ASM is kept (decision #1): convert the retained `.ASM` files to UASM-assembled objects wired into CMake via a custom command/target.
-- Get `WIN32LIB/` compiling clean under MSVC 2026 as a static library target in the new CMake build.
+- Convert the retained `.ASM` files to UASM-assembled objects wired into CMake via a custom command/target. Flag: some 32-bit-flat-model assembly may need adjustment for x64 calling conventions/pointer sizes even without a full C++ rewrite — assess per-file when reached.
+- Get `WIN32LIB/` compiling clean under MSVC 2026 (x64) as a static library target in the new CMake build.
 - Get `CODE/` compiling against it.
 
 ### Phase 3 — Verify
 - Confirm the resulting executable links and runs against real game assets (per [../agent_policies/licensing.md](../agent_policies/licensing.md), the user needs to own the game for the assets — this plan only ever touches code).
 - Update [../project_state/overview.md](../project_state/overview.md)'s "Build status: does not currently compile" line once genuinely false.
-- Move this file to [../plans_done/summary.md](../plans_done/summary.md) once the new build is the working baseline.
+- This is the point where the "get everything working" milestone is complete — Phases 4-5 below are the deferred "ultimate goal" work and don't block calling Phase 0-3 done.
+
+### Phase 4 — Cross-platform renderer + platform-layer rewrite (deferred — the "ultimate goal")
+- Replace the DirectDraw-via-shim path with **SDL3** for windowing/input/audio/event handling, replacing `WIN32LIB`'s Windows-specific `KEYBOARD`/`MOUSE`/`WINCOMM`/`PLAYCD`/`TIMER` modules — this is what actually enables a genuine cross-platform (Windows/Linux/macOS) build; Phases 0-3 only reach modern *Windows*.
+- Build **two separate, hand-rolled rendering backends**: Vulkan (primary/cross-platform) and Direct3D 12 (Windows-specific) — not SDL3's `SDL_GPU` abstraction.
+- Integrate **Dear ImGui** on top of both backends (`imgui_impl_sdl3` + `imgui_impl_vulkan`/`imgui_impl_dx12`) for a debug overlay (successor to `CODE/MONOC.CPP`'s mono-monitor debug screen) and likely a rebuilt map-editor UI — not the in-game HUD, which stays on the original pixel-art `GadgetClass` widget rendering ported to whichever backend is active.
+
+### Phase 5 — ASM → C++ rewrite of hot paths (deferred backlog)
+- Revisit whether the original performance rationale for hand-tuned routines (e.g. `SHAPE/DS_*.ASM`'s 13 blit variants) still holds under modern compilers/hardware; rewrite in C++ where it doesn't, removing the UASM build step entirely once complete.
 
 ## Status log
-- **2026-09-12**: Plan created; research phase complete (toolchain/dependency replacements identified in modernization_options.md). No code or build-file changes made yet. The four open engineering decisions above block the start of Phase 1 — need the project owner's call on each before proceeding.
+- **2026-09-12**: Plan created; research complete, all five architecture decisions resolved by the project owner (see above). No code or build-file changes made yet. Next action: start Phase 0 (vcpkg submodule + CMake skeleton) when the owner is ready to begin implementation.
