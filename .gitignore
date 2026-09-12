@@ -1,0 +1,7 @@
+# CMake build output
+/build/
+/install/
+CMakeUserPresets.json
+
+# vcpkg manifest-mode local install tree (if ever generated outside externals/vcpkg)
+/vcpkg_installed/
