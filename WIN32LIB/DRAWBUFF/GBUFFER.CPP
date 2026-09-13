@@ -55,6 +55,9 @@
 int		TotalLocks;
 BOOL 	AllowHardwareBlitFills = TRUE;
 
+// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): see GraphicBufferClass::Init.
+GraphicBufferClass * VisibleGraphicBuffer = NULL;
+
 
 //int	CacheAllowed;
 
@@ -246,28 +249,60 @@ void GraphicBufferClass::DD_Init(GBC_Enum flags)
 	memset (&VideoSurfaceDescription , 0 , sizeof ( VideoSurfaceDescription ));
 
 	VideoSurfaceDescription.dwSize			= sizeof( VideoSurfaceDescription );
-	VideoSurfaceDescription.dwFlags 			= DDSD_CAPS;
-	VideoSurfaceDescription.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
+	if ( Width == 320 ) {
+		//
+		// Legacy 320-wide ModeX path - see the matching comment in DDRAW.CPP's Set_Video_Mode.
+		// Dead code for current (640-wide) gameplay, left exactly as originally shipped
+		// (primary-surface based, relies on the display mode itself being 8bpp).
+		//
+		VideoSurfaceDescription.dwFlags 			= DDSD_CAPS;
+		VideoSurfaceDescription.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_MODEX;
 
-	if (!(flags & GBC_VISIBLE)) {
+		if (!(flags & GBC_VISIBLE)) {
+			VideoSurfaceDescription.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_MODEX;
+			VideoSurfaceDescription.dwFlags 		  |=	DDSD_HEIGHT | DDSD_WIDTH;
+			VideoSurfaceDescription.dwHeight			= Height;
+			VideoSurfaceDescription.dwWidth			= Width;
+		}
+	} else {
+		//
+		// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): every real
+		// surface - the "visible" page included - is now a plain offscreen surface; Set_Video_Mode
+		// no longer puts DirectDraw into exclusive fullscreen or sets an 8-bit display mode (modern
+		// WDDM drivers refuse that unconditionally), so nothing here can rely on "the display mode"
+		// to supply an 8bpp pixel format for free anymore - it has to be requested explicitly.
+		// Present_VisiblePage() (DDRAW.CPP) hands the surface tracked as PaletteSurface to the real
+		// window via GDI instead of relying on a hardware page flip/primary surface.
+		//
+		VideoSurfaceDescription.dwFlags			= DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT;
 		VideoSurfaceDescription.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-		VideoSurfaceDescription.dwFlags 		  |=	DDSD_HEIGHT | DDSD_WIDTH;
 		VideoSurfaceDescription.dwHeight			= Height;
 		VideoSurfaceDescription.dwWidth			= Width;
-	}
-
-	//
-	// Need to set the DDSCAPS_MODEX  flag if we want a 320 wide mode
-	//
-	if ( Width == 320 ) {
-		VideoSurfaceDescription.ddsCaps.dwCaps |= DDSCAPS_MODEX;
+		VideoSurfaceDescription.ddpfPixelFormat.dwSize			= sizeof(DDPIXELFORMAT);
+		VideoSurfaceDescription.ddpfPixelFormat.dwFlags			= DDPF_PALETTEINDEXED8;
+		VideoSurfaceDescription.ddpfPixelFormat.dwRGBBitCount	= 8;
 	}
 
 	//
 	// Call CreateSurface
 	//
-	DirectDrawObject->CreateSurface( &VideoSurfaceDescription , &VideoSurfacePtr , NULL);
+	// Diagnostic addition (Agent/plans_done/code_1c_port_log.md): CreateSurface's result used to
+	// go unchecked entirely - if it fails, VideoSurfacePtr is left NULL and every later ->Blt()/
+	// ->Lock() on this surface null-derefs through the COM vtable with no clue why. Check it and
+	// track the failure (VideoSurfacePtr stays NULL, which GraphicBufferClass::Init already treats
+	// as "fall back to plain memory" - see its own comment) instead of crashing blind.
+	//
+	// Deliberately NOT calling Process_DD_Result() here: on the real (non-ModeX) path this fails
+	// on EVERY offscreen surface the whole game creates (DDERR_INVALIDPIXELFORMAT - confirmed by
+	// actually running this build; modern DirectDraw refuses 8-bit palette-indexed surfaces
+	// outright), so it's now an expected, silently-handled condition, not a real error - a message
+	// box per surface would mean one modal popup after another throughout normal play.
+	HRESULT create_result = DirectDrawObject->CreateSurface( &VideoSurfaceDescription , &VideoSurfacePtr , NULL);
+	if (create_result != DD_OK) {
+		VideoSurfacePtr = NULL;
+		return;
+	}
 	AllSurfaces.Add_DD_Surface (VideoSurfacePtr);
 
 	if ( GBC_VISIBLE & flags ){
@@ -310,6 +345,15 @@ void GraphicBufferClass::Init(int w, int h, void *buffer, long size, GBC_Enum fl
 	Width			= w;										// Record width of Buffer
 	Height		= h;										// Record height of Buffer
 
+	// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): VisibleGraphicBuffer
+	// records which buffer is "the" visible page regardless of how it ends up backed (real
+	// DirectDraw surface or, universally on current Windows - see DD_Init's comment - plain
+	// system memory), so Present_VisiblePage (WIN32LIB/MISC/PRESENT_D3D.CPP) can find it without
+	// WIN32LIB needing to know about CODE/'s VisiblePage global.
+	if (flags & GBC_VISIBLE) {
+		VisibleGraphicBuffer = this;
+	}
+
 	//
 	// If the surface we are creating is a direct draw object then
 	//   we need to do a direct draw init.  Otherwise we will do
@@ -317,7 +361,16 @@ void GraphicBufferClass::Init(int w, int h, void *buffer, long size, GBC_Enum fl
 	//
 	if (flags & (GBC_VIDEOMEM | GBC_VISIBLE)) {
 		DD_Init(flags);
-	} else {
+	}
+
+	// Sub-milestone 1c-continued fix: DD_Init can legitimately fail now (modern DirectDraw
+	// refuses 8-bit palette-indexed surfaces outright - DDERR_INVALIDPIXELFORMAT, confirmed by
+	// actually running this build), leaving VideoSurfacePtr NULL. Fall back to the same plain
+	// heap allocation already used for non-DirectDraw buffers instead of leaving the object
+	// half-initialized - this is exactly HiddenPage's own pre-existing system-memory fallback,
+	// just reached from a different trigger. Costs nothing on a hypothetical system where
+	// DD_Init does succeed (VideoSurfacePtr non-NULL skips straight past this).
+	if (!(flags & (GBC_VIDEOMEM | GBC_VISIBLE)) || !VideoSurfacePtr) {
 		if (buffer) {										// if buffer is specified
 			Buffer		= (BYTE *)buffer;				//		point to it and mark
 			Allocated	= FALSE;							//		it as user allocated
@@ -326,7 +379,7 @@ void GraphicBufferClass::Init(int w, int h, void *buffer, long size, GBC_Enum fl
 			Buffer		= new BYTE[Size];				// otherwise allocate it and
 			Allocated	= TRUE;							//		mark it system alloced
 		}
-		Offset			= (long)Buffer;				// Get offset to the buffer
+		Offset			= (INT_PTR)Buffer;			// Get offset to the buffer (INT_PTR - see GBUFFER.H's comment on Offset)
 		IsDirectDraw	= FALSE;
 	}
 
@@ -578,7 +631,7 @@ BOOL GraphicBufferClass::Lock(void)
 
 			switch (result){
 				case DD_OK :
-					Offset	= (unsigned long)VideoSurfaceDescription.lpSurface;
+					Offset	= (INT_PTR)VideoSurfaceDescription.lpSurface;	// INT_PTR - see GBUFFER.H's comment on Offset
 					Pitch		= VideoSurfaceDescription.lPitch;
 					Pitch	  -= Width;
 					LockCount++;		// increment count so we can track if

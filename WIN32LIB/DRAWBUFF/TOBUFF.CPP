@@ -47,7 +47,9 @@ extern "C" long __cdecl Buffer_To_Buffer(void * thisptr, int x_pixel, int y_pixe
 
 	if ((long)pixel_width * copy_height > buffer_size) return 0;
 
-	unsigned char const * src_base = (unsigned char const *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char const * src_base = (unsigned char const *)viewport->Get_Offset();
 	int src_stride = vp_width + viewport->Get_XAdd() + viewport->Get_Pitch();
 
 	unsigned char * dst = (unsigned char *)dest + (long)dest_y0 * pixel_width + dest_x0;

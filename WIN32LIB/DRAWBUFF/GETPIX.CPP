@@ -31,7 +31,9 @@ extern "C" int __cdecl Buffer_Get_Pixel(void * thisptr, int x_pixel, int y_pixel
 	if ((unsigned)x_pixel >= (unsigned)viewport->Get_Width()) return 0;
 	if ((unsigned)y_pixel >= (unsigned)viewport->Get_Height()) return 0;
 
-	unsigned char * base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * base = (unsigned char *)viewport->Get_Offset();
 	int stride = viewport->Get_Width() + viewport->Get_XAdd() + viewport->Get_Pitch();
 
 	return base[(long)y_pixel * stride + x_pixel];

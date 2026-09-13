@@ -208,8 +208,9 @@ extern "C" long __cdecl Buffer_Frame_To_Page(int x_pixel, int y_pixel, int pixel
 	if (copy_width <= 0 || copy_height <= 0) return 0;
 
 	int dst_stride = view.Get_Width() + view.Get_XAdd() + view.Get_Pitch();
-	unsigned char * dst_row = (unsigned char *)view.Get_Graphic_Buffer()->Get_Buffer() + view.Get_Offset()
-		+ (long)y0 * dst_stride + x0;
+	// Offset alone is the complete pixel-data pointer - see WIN32LIB/DRAWBUFF/CLEAR.CPP's comment.
+	// Adding Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * dst_row = (unsigned char *)view.Get_Offset() + (long)y0 * dst_stride + x0;
 	unsigned char const * src_row = pixel_data + (long)src_y * pixel_width + src_x;
 
 	bool trans = (flags & SHAPE_TRANS) != 0;

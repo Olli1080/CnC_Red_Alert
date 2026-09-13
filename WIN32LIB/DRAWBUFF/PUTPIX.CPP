@@ -28,7 +28,9 @@ extern "C" void __cdecl Buffer_Put_Pixel(void * thisptr, int x_pixel, int y_pixe
 	if ((unsigned)x_pixel >= (unsigned)viewport->Get_Width()) return;
 	if ((unsigned)y_pixel >= (unsigned)viewport->Get_Height()) return;
 
-	unsigned char * base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * base = (unsigned char *)viewport->Get_Offset();
 	int stride = viewport->Get_Width() + viewport->Get_XAdd() + viewport->Get_Pitch();
 
 	base[(long)y_pixel * stride + x_pixel] = color;

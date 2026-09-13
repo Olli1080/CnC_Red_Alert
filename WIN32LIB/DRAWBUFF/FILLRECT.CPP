@@ -40,7 +40,9 @@ extern "C" void __cdecl Buffer_Fill_Rect(void * thisptr, int x1, int y1, int x2,
 	if (y2 >= height) y2 = height - 1;
 	if (x1 > x2 || y1 > y2) return;
 
-	unsigned char * base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * base = (unsigned char *)viewport->Get_Offset();
 	int stride = width + viewport->Get_XAdd() + viewport->Get_Pitch();
 	int fill_width = x2 - x1 + 1;
 

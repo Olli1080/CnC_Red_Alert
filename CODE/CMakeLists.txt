@@ -342,6 +342,12 @@ target_link_libraries(redalert_code PUBLIC win32lib)
 #     the usual #pragma comment(lib,...) idiom anywhere in this tree.
 # CC_ICON.RC is NOT included: it references "redalert.ico", which does not exist anywhere in this
 # GPL release (checked the whole repo) - cosmetic only, not worth blocking the link over.
+#
+# d3d11/d3dcompiler (Agent/plans_done/code_1c_port_log.md, "DirectDraw 8-bit palette wall"
+# follow-up): modern DirectDraw refuses to create an 8-bit palette-indexed surface in any
+# capacity (DDERR_INVALIDPIXELFORMAT, confirmed by actually running this build), not just an
+# exclusive-fullscreen display mode - WIN32LIB/MISC/PRESENT_D3D.CPP presents the visible page via
+# a small Direct3D 11 swapchain instead.
 add_executable(redalert WIN32 EXE_STUB.CPP)
 target_link_libraries(redalert PRIVATE
     redalert_code
@@ -353,4 +359,6 @@ target_link_libraries(redalert PRIVATE
     gdi32
     advapi32
     shell32
+    d3d11
+    d3dcompiler
 )

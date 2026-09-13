@@ -60,6 +60,24 @@ unsigned 	Get_Free_Video_Memory(void);
 void 		Wait_Blit(void);
 unsigned 	Get_Video_Hardware_Capabilities(void);
 
+/*=========================================================================*/
+/* The following prototypes are for the file: PRESENT_D3D.CPP					*/
+/*=========================================================================*/
+// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): modern DirectDraw can't
+// host this engine's 8-bit palette-indexed pixel data at all anymore (DDERR_INVALIDPIXELFORMAT,
+// confirmed by actually running this build), so VisiblePage (WIN32LIB/DRAWBUFF/GBUFFER.CPP) falls
+// back to plain system memory and a small Direct3D 11 swapchain presents it to the real window
+// instead of a DirectDraw hardware primary/page flip.
+//
+// Init_Present_Device sets up the swapchain/textures/shaders - called once from Set_Video_Mode.
+// Update_Palette_Texture refreshes the 256-entry palette lookup texture - called from
+// Set_DD_Palette whenever PaletteEntries[] changes. Present_VisiblePage uploads the current
+// VisibleGraphicBuffer contents and presents a frame - called from GBUFFER.H's GraphicViewPortClass::
+// Blit() overloads whenever a finished frame lands in the buffer tracked as VisibleGraphicBuffer.
+BOOL		Init_Present_Device(HWND hwnd, int width, int height);
+void		Update_Palette_Texture(PALETTEENTRY const * entries);
+void		Present_VisiblePage(void);
+
 extern "C" void Wait_Vert_Blank(void);
 extern "C" void Set_DD_Palette (void *palette);
 

@@ -71,7 +71,9 @@ void __cdecl Mouse_Shadow_Buffer(void * thisptr, GraphicViewPortClass * scr, voi
 	int copy_height = y1 - y0;
 	int dst_stride = scr->Get_Width() + scr->Get_XAdd() + scr->Get_Pitch();
 
-	unsigned char * screen = (unsigned char *)scr->Get_Graphic_Buffer()->Get_Buffer() + scr->Get_Offset() + (long)y0 * dst_stride + x0;
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * screen = (unsigned char *)scr->Get_Offset() + (long)y0 * dst_stride + x0;
 	unsigned char * buf = (unsigned char *)buffer + src_offset + buffx0;
 
 	if (!store) {
@@ -106,7 +108,9 @@ void __cdecl Draw_Mouse(void * thisptr, GraphicViewPortClass * scr, int mousex, 
 	int copy_height = y1 - y0;
 	int dst_stride = scr->Get_Width() + scr->Get_XAdd() + scr->Get_Pitch();
 
-	unsigned char * dest = (unsigned char *)scr->Get_Graphic_Buffer()->Get_Buffer() + scr->Get_Offset() + (long)y0 * dst_stride + x0;
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * dest = (unsigned char *)scr->Get_Offset() + (long)y0 * dst_stride + x0;
 	unsigned char const * src = (unsigned char const *)mouse->MouseCursor + src_offset + buffx0;
 
 	for (int row = 0; row < copy_height; row++) {

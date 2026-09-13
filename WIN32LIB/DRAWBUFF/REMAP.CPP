@@ -40,7 +40,9 @@ extern "C" void __cdecl Buffer_Remap(void * thisptr, int x0, int y0, int width, 
 	if (y1 > vp_height) y1 = vp_height;
 	if (x0 >= x1 || y0 >= y1) return;
 
-	unsigned char * base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * base = (unsigned char *)viewport->Get_Offset();
 	int stride = vp_width + viewport->Get_XAdd() + viewport->Get_Pitch();
 	unsigned char const * table = (unsigned char const *)remap_table;
 

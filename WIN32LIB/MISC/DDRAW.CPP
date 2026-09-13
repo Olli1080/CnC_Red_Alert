@@ -463,10 +463,28 @@ BOOL Set_Video_Mode(HWND hwnd, int w, int h, int bits_per_pixel)
 		Process_DD_Result(result, FALSE);
 		if (result == DD_OK){
 			if (w==320){
+				// Legacy 320-wide ModeX path (dead code for current, 640-wide gameplay). Left
+				// running real exclusive fullscreen as originally shipped - it still hits the
+				// same modern-WDDM "no 8-bit exclusive mode" wall the non-ModeX branch below
+				// now avoids, but isn't reachable from the actual game's resolution options.
 				result = DirectDrawObject->SetCooperativeLevel(hwnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWMODEX);
 			} else {
-				//MessageBox(MainWindow, "In Set_Video_Mode. About to call SetCooperativeLevel.","Note", MB_ICONEXCLAMATION|MB_OK);
-				result = DirectDrawObject->SetCooperativeLevel(hwnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
+				// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): modern
+				// WDDM display drivers unconditionally refuse an 8-bit indexed exclusive
+				// fullscreen mode (the SetDisplayMode call this used to make below) - and, it
+				// turns out, refuse to CreateSurface an 8-bit palette-indexed surface in ANY
+				// capacity at all (DDERR_INVALIDPIXELFORMAT, confirmed by actually running this
+				// build) - so DirectDraw can no longer host this engine's pixel data at all, not
+				// just its exclusive-fullscreen display mode. Run DirectDraw windowed
+				// (DDSCL_NORMAL) against the existing borderless-popup MainWindow
+				// (CODE/WINSTUB.CPP already sizes it to the full screen) purely for the cosmetic
+				// capability queries (Get_Free_Video_Memory/Get_Video_Hardware_Capabilities) that
+				// still reference DirectDrawObject, and never touch the desktop's own display
+				// mode. VisiblePage (GBUFFER.CPP's GraphicBufferClass::Init/DD_Init) falls back to
+				// plain system memory; Init_Present_Device (WIN32LIB/MISC/PRESENT_D3D.CPP) stands
+				// up a small Direct3D 11 swapchain that Present_VisiblePage uses to hand the
+				// finished frame to the real window instead of a DirectDraw hardware primary.
+				result = DirectDrawObject->SetCooperativeLevel(hwnd, DDSCL_NORMAL);
 			}
 			Process_DD_Result(result, FALSE);
 		}else{
@@ -474,16 +492,21 @@ BOOL Set_Video_Mode(HWND hwnd, int w, int h, int bits_per_pixel)
 		}
 	}
 
-	//
-	// Set the required display mode with 8 bits per pixel
-	//
-	//MessageBox(MainWindow, "In Set_Video_Mode. About to call call SetDisplayMode.","Note", MB_ICONEXCLAMATION|MB_OK);
-	result = DirectDrawObject->SetDisplayMode ( w , h , bits_per_pixel );
-	if (result != DD_OK){
-//		Process_DD_Result(result, FALSE);
-		DirectDrawObject->Release();
-		DirectDrawObject = NULL;
-		return(FALSE);
+	if (w == 320) {
+		//
+		// ModeX path only (see above) - every other surface is created with an explicit
+		// pixel format now, independent of the display mode.
+		//
+		result = DirectDrawObject->SetDisplayMode ( w , h , bits_per_pixel );
+		if (result != DD_OK){
+			DirectDrawObject->Release();
+			DirectDrawObject = NULL;
+			return(FALSE);
+		}
+	} else {
+		if (!Init_Present_Device(hwnd, w, h)) {
+			return (FALSE);
+		}
 	}
 
 	//
@@ -748,6 +771,12 @@ void Set_DD_Palette ( void *palette )
 		//MessageBox(MainWindow, "In Set_DD_Palette. About to call SetEntries","Note", MB_ICONEXCLAMATION|MB_OK);
 		PalettePtr->SetEntries( 0 , 0 , 256 , &PaletteEntries[0] );
 	}
+
+	// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): also refresh the
+	// D3D11 palette lookup texture Present_VisiblePage (WIN32LIB/MISC/PRESENT_D3D.CPP) reads from
+	// - harmless to call even before Init_Present_Device has run (it no-ops without a device).
+	Update_Palette_Texture(PaletteEntries);
+
 	//MessageBox(MainWindow, "Leaving Set_DD_Palette","Note", MB_ICONEXCLAMATION|MB_OK);
 
 }

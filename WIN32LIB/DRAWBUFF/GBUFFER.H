@@ -241,7 +241,7 @@ class GraphicViewPortClass {
 		/*===================================================================*/
 		/* define functions to get at the private data members					*/
 		/*===================================================================*/
-		long	Get_Offset(void);
+		INT_PTR	Get_Offset(void);
 		int	Get_Height(void);
 		int	Get_Width(void);
 		int	Get_XAdd(void);
@@ -331,7 +331,16 @@ class GraphicViewPortClass {
 		/*===================================================================*/
 		/* Define the data used by a GraphicViewPortClass							*/
 		/*===================================================================*/
-		long					Offset;			// offset to graphic page
+		// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): this was `long`
+		// (32-bit even in this x64 build - Windows' LLP64 model) despite every real caller
+		// throughout CODE/ and WIN32LIB/ (CONQUER.CPP, TOOLTIP.CPP, INTERPAL.CPP, WWMOUSE.CPP,
+		// etc. - the original 1994-2026 convention, not something this port changed) casting
+		// Get_Offset() straight to a pointer and dereferencing it: a genuine, pre-existing 64-bit
+		// pointer truncation bug (the class of bug this project already excluded 2KEYFBUF.ASM's
+		// old BigShapeBufferStart cast for), just never exercised until this session's D3D11
+		// presenter fix finally got real pixel-writing code (Buffer_Clear et al.) to actually run.
+		// INT_PTR is exactly wide enough to round-trip a real pointer on any target.
+		INT_PTR					Offset;			// offset to graphic page (see comment above)
 		int						Width;			// width of graphic page
 		int						Height;			// height of graphic page
 		int						XAdd;			// xadd for graphic page (0)
@@ -357,6 +366,15 @@ class GraphicViewPortClass {
 /*			long	Pitch		-		modulo of buffer for reading and writing																						*/
 /*			BOOL	IsDirectDraw - 		flag if its a direct draw surface																						*/
 /*=========================================================================*/
+// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): the buffer currently
+// flagged GBC_VISIBLE, regardless of how it ends up backed (real DirectDraw surface or, now
+// universally on current Windows, plain system memory - see GraphicBufferClass::Init). Lets the
+// Blit() overloads below present a finished frame without WIN32LIB needing to know about CODE/'s
+// VisiblePage global. Declared here (not misc.h) since GBUFFER.H doesn't otherwise depend on it.
+class GraphicBufferClass;
+extern GraphicBufferClass * VisibleGraphicBuffer;
+extern void Present_VisiblePage(void);
+
 class GraphicBufferClass : public GraphicViewPortClass, public BufferClass {
 
 	public:
@@ -498,7 +516,7 @@ inline BOOL GraphicViewPortClass::Unlock(void)
  * HISTORY:                                                                *
  *   06/07/1994 PWG : Created.                                             *
  *=========================================================================*/
-inline long GraphicViewPortClass::Get_Offset(void)
+inline INT_PTR GraphicViewPortClass::Get_Offset(void)
 {
 	return(Offset);
 }
@@ -782,6 +800,13 @@ inline HRESULT	GraphicViewPortClass::Blit(	GraphicViewPortClass& dest, int x_pix
 		Unlock();
 	}
 
+	// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): a finished
+	// frame has to be handed to the real window ourselves now - see VisibleGraphicBuffer's
+	// comment above.
+	if ( dest.GraphicBuff == VisibleGraphicBuffer ){
+		Present_VisiblePage();
+	}
+
 	return ( return_code );
 }
 
@@ -817,6 +842,13 @@ inline HRESULT	GraphicViewPortClass::Blit(	GraphicViewPortClass& dest, int dx, i
 			dest.Unlock();
 		}
 		Unlock();
+	}
+
+	// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): a finished
+	// frame has to be handed to the real window ourselves now - see VisibleGraphicBuffer's
+	// comment above.
+	if ( dest.GraphicBuff == VisibleGraphicBuffer ){
+		Present_VisiblePage();
 	}
 
 	return (return_code);
@@ -857,6 +889,13 @@ inline HRESULT	GraphicViewPortClass::Blit(	GraphicViewPortClass& dest, BOOL tran
 			dest.Unlock();
 		}
 		Unlock();
+	}
+
+	// Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): a finished
+	// frame has to be handed to the real window ourselves now - see VisibleGraphicBuffer's
+	// comment above.
+	if ( dest.GraphicBuff == VisibleGraphicBuffer ){
+		Present_VisiblePage();
 	}
 
 	return (return_code);

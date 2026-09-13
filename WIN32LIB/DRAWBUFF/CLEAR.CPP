@@ -27,7 +27,14 @@ extern "C" void __cdecl Buffer_Clear(void * thisptr, unsigned char color)
 {
 	GraphicViewPortClass * viewport = (GraphicViewPortClass *)thisptr;
 
-	unsigned char * dest = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is always the complete, ready-to-use pixel-data pointer (as a long) - for a
+	// plain-memory buffer it's set equal to Buffer at Init(), for a locked DirectDraw surface it's
+	// the surface's locked pointer, and for an attached sub-viewport it's the parent's own Offset
+	// plus a row/column delta (see GraphicViewPortClass::Attach). Get_Buffer()/Buffer is a
+	// separate, ownership-tracking accessor (what to delete[]), not something to add on top -
+	// doing so double-counts the pointer. Found via the actual crash this caused the first time
+	// this code path ran for real (Agent/plans_done/code_1c_port_log.md).
+	unsigned char * dest = (unsigned char *)viewport->Get_Offset();
 	int width = viewport->Get_Width();
 	int stride = width + viewport->Get_XAdd() + viewport->Get_Pitch();
 	int height = viewport->Get_Height();

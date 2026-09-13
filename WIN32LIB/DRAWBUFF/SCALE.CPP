@@ -100,8 +100,10 @@ extern "C" BOOL __cdecl Linear_Scale_To_Linear(void * thisptr, void * dest_ptr,
 
 	int src_stride = src_vp->Get_Width() + src_vp->Get_XAdd() + src_vp->Get_Pitch();
 	int dst_stride = dst_vp->Get_Width() + dst_vp->Get_XAdd() + dst_vp->Get_Pitch();
-	unsigned char const * src_base = (unsigned char const *)src_vp->Get_Graphic_Buffer()->Get_Buffer() + src_vp->Get_Offset();
-	unsigned char * dst_base = (unsigned char *)dst_vp->Get_Graphic_Buffer()->Get_Buffer() + dst_vp->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char const * src_base = (unsigned char const *)src_vp->Get_Offset();
+	unsigned char * dst_base = (unsigned char *)dst_vp->Get_Offset();
 	unsigned char const * remap_table = (unsigned char const *)remap;
 
 	for (int row = 0; row < count_y; row++) {

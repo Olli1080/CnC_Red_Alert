@@ -45,7 +45,9 @@ extern "C" long __cdecl Buffer_To_Page(int x_pixel, int y_pixel, int pixel_width
 	int copy_height = dst_y1 - dst_y0;
 	if (copy_width <= 0 || copy_height <= 0) return 0;
 
-	unsigned char * dst_base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * dst_base = (unsigned char *)viewport->Get_Offset();
 	int dst_stride = vp_width + viewport->Get_XAdd() + viewport->Get_Pitch();
 	unsigned char const * src_ptr = (unsigned char const *)src + (long)src_y0 * pixel_width + src_x0;
 

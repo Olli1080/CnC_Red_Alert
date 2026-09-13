@@ -90,8 +90,9 @@ extern "C" long __cdecl Buffer_Print(void * thisptr, char const * string, int x_
 	int vpheight = viewport->Get_Height();
 	int bufferwidth = vpwidth + viewport->Get_XAdd() + viewport->Get_Pitch();
 
-	unsigned char * curline = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer()
-		+ viewport->Get_Offset() + (long)y_pixel * bufferwidth;
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * curline = (unsigned char *)viewport->Get_Offset() + (long)y_pixel * bufferwidth;
 	unsigned char * startdraw = curline + x_pixel;
 	int original_x = x_pixel;
 

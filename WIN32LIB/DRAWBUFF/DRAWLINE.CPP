@@ -79,7 +79,9 @@ extern "C" void __cdecl Buffer_Draw_Line(void * thisptr, int x1, int y1, int x2,
 		}
 	}
 
-	unsigned char * base = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * base = (unsigned char *)viewport->Get_Offset();
 	int stride = viewport->Get_Width() + viewport->Get_XAdd() + viewport->Get_Pitch();
 
 	int dx = abs(x2 - x1), sx = (x1 < x2) ? 1 : -1;

@@ -489,17 +489,28 @@ int main(int argc, char * argv[])
 
 				/*
 				** Check that we really got a video memory page. Failure is fatal.
+				**
+				** Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): modern
+				** DirectDraw refuses to create an 8-bit palette-indexed surface at all anymore
+				** (confirmed by actually running this build), so VisiblePage.Get_DD_Surface() is
+				** now universally NULL here - GraphicBufferClass::Init already fell back to plain
+				** system memory, which is the same fact this check exists to detect, just
+				** discovered earlier. Skip straight past the DirectDraw-specific query when
+				** there's no real surface to ask; the fatal-error path is preserved for a
+				** hypothetical future/older system where DD_Init does succeed.
 				*/
-				memset (&surface_capabilities, 0, sizeof(surface_capabilities));
-				VisiblePage.Get_DD_Surface()->GetCaps(&surface_capabilities);
-				if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY) {
-					/*
-					** Aaaarrgghh!
-					*/
-					WWDebugString(TEXT_DDRAW_ERROR);WWDebugString("\n");
-					MessageBox(MainWindow, TEXT_DDRAW_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION|MB_OK);
-					if (WindowsTimer) delete WindowsTimer;
-					return (EXIT_FAILURE);
+				if (VisiblePage.Get_DD_Surface()) {
+					memset (&surface_capabilities, 0, sizeof(surface_capabilities));
+					VisiblePage.Get_DD_Surface()->GetCaps(&surface_capabilities);
+					if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY) {
+						/*
+						** Aaaarrgghh!
+						*/
+						WWDebugString(TEXT_DDRAW_ERROR);WWDebugString("\n");
+						MessageBox(MainWindow, TEXT_DDRAW_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION|MB_OK);
+						if (WindowsTimer) delete WindowsTimer;
+						return (EXIT_FAILURE);
+					}
 				}
 
 				/*
@@ -524,20 +535,27 @@ int main(int argc, char * argv[])
 					/*
 					** Make sure we really got a video memory hid page. If we didnt then things
 					** will run very slowly.
+					**
+					** Sub-milestone 1c-continued fix: same NULL-surface reasoning as VisiblePage
+					** above - HiddenPage.Get_DD_Surface() is universally NULL now too, and Init()
+					** already fell back to plain memory (exactly what this block exists to
+					** arrange), so there's nothing left for this check to do.
 					*/
-					memset (&surface_capabilities, 0, sizeof(surface_capabilities));
-					HiddenPage.Get_DD_Surface()->GetCaps(&surface_capabilities);
-					if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY) {
+					if (HiddenPage.Get_DD_Surface()) {
+						memset (&surface_capabilities, 0, sizeof(surface_capabilities));
+						HiddenPage.Get_DD_Surface()->GetCaps(&surface_capabilities);
+						if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY) {
 
-						/*
-						** Oh dear, big trub. This must be an IBM crAptiva or something similarly cruddy.
-						** We must redo the Hidden Page as system memory.
-						*/
-						AllSurfaces.Remove_DD_Surface(HiddenPage.Get_DD_Surface());  // Remove the old surface from the AllSurfaces list
-						HiddenPage.Get_DD_Surface()->Release();
-						HiddenPage.Init (ScreenWidth , ScreenHeight , NULL , 0 , (GBC_Enum)0);
-					} else {
-						VisiblePage.Attach_DD_Surface(&HiddenPage);
+							/*
+							** Oh dear, big trub. This must be an IBM crAptiva or something similarly cruddy.
+							** We must redo the Hidden Page as system memory.
+							*/
+							AllSurfaces.Remove_DD_Surface(HiddenPage.Get_DD_Surface());  // Remove the old surface from the AllSurfaces list
+							HiddenPage.Get_DD_Surface()->Release();
+							HiddenPage.Init (ScreenWidth , ScreenHeight , NULL , 0 , (GBC_Enum)0);
+						} else {
+							VisiblePage.Attach_DD_Surface(&HiddenPage);
+						}
 					}
 				}
 			}
@@ -758,20 +776,31 @@ bool InitDDraw(void)
 		{
 		VisiblePage.Init(ScreenWidth, ScreenHeight, NULL, 0, (GBC_Enum)(GBC_VISIBLE|GBC_VIDEOMEM));
 
-		/* Check that we really got a video memory page. Failure is fatal. */
-		memset(&surface_capabilities, 0, sizeof(surface_capabilities));
-		VisiblePage.Get_DD_Surface()->GetCaps(&surface_capabilities);
-
-		if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY)
+		/* Check that we really got a video memory page. Failure is fatal.
+		 *
+		 * Sub-milestone 1c-continued fix (Agent/plans_done/code_1c_port_log.md): modern DirectDraw
+		 * refuses to create an 8-bit palette-indexed surface at all anymore (confirmed by actually
+		 * running this build), so VisiblePage.Get_DD_Surface() is now universally NULL here -
+		 * GraphicBufferClass::Init already fell back to plain system memory, which is the same
+		 * fact this check exists to detect, just discovered earlier. Skip straight past the
+		 * DirectDraw-specific query when there's no real surface to ask; the fatal-error path
+		 * below is preserved for a hypothetical future/older system where DD_Init does succeed. */
+		if (VisiblePage.Get_DD_Surface())
 			{
-			/* Aaaarrgghh! */
-			WWDebugString(TEXT_DDRAW_ERROR);WWDebugString("\n");
-			MessageBox(MainWindow, TEXT_DDRAW_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION|MB_OK);
+			memset(&surface_capabilities, 0, sizeof(surface_capabilities));
+			VisiblePage.Get_DD_Surface()->GetCaps(&surface_capabilities);
 
-			if (WindowsTimer)
-				delete WindowsTimer;
-				
-			return false;
+			if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY)
+				{
+				/* Aaaarrgghh! */
+				WWDebugString(TEXT_DDRAW_ERROR);WWDebugString("\n");
+				MessageBox(MainWindow, TEXT_DDRAW_ERROR, TEXT_SHORT_TITLE, MB_ICONEXCLAMATION|MB_OK);
+
+				if (WindowsTimer)
+					delete WindowsTimer;
+
+				return false;
+				}
 			}
 
 		/* If we have enough left then put the hidpage in video memory unless...
@@ -797,22 +826,29 @@ bool InitDDraw(void)
 
 			/* Make sure we really got a video memory hid page. If we didnt then things
 			 * will run very slowly.
-			 */
-			memset(&surface_capabilities, 0, sizeof(surface_capabilities));
-			HiddenPage.Get_DD_Surface()->GetCaps(&surface_capabilities);
-			
-			if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY)
+			 *
+			 * Sub-milestone 1c-continued fix: same NULL-surface reasoning as VisiblePage above -
+			 * HiddenPage.Get_DD_Surface() is universally NULL now too, and Init() already fell
+			 * back to plain memory (exactly what this whole block exists to arrange), so there's
+			 * nothing left for this check to do. */
+			if (HiddenPage.Get_DD_Surface())
 				{
-				/* Oh dear, big trub. This must be an IBM crAptiva or something similarly cruddy.
-				 * We must redo the Hidden Page as system memory.
-				 */
-				AllSurfaces.Remove_DD_Surface(HiddenPage.Get_DD_Surface());  // Remove the old surface from the AllSurfaces list
-				HiddenPage.Get_DD_Surface()->Release();
-				HiddenPage.Init(ScreenWidth, ScreenHeight, NULL, 0, (GBC_Enum)0);
-				}
-			else
-				{
-				VisiblePage.Attach_DD_Surface(&HiddenPage);
+				memset(&surface_capabilities, 0, sizeof(surface_capabilities));
+				HiddenPage.Get_DD_Surface()->GetCaps(&surface_capabilities);
+
+				if (surface_capabilities.dwCaps & DDSCAPS_SYSTEMMEMORY)
+					{
+					/* Oh dear, big trub. This must be an IBM crAptiva or something similarly cruddy.
+					 * We must redo the Hidden Page as system memory.
+					 */
+					AllSurfaces.Remove_DD_Surface(HiddenPage.Get_DD_Surface());  // Remove the old surface from the AllSurfaces list
+					HiddenPage.Get_DD_Surface()->Release();
+					HiddenPage.Init(ScreenWidth, ScreenHeight, NULL, 0, (GBC_Enum)0);
+					}
+				else
+					{
+					VisiblePage.Attach_DD_Surface(&HiddenPage);
+					}
 				}
 			}
 		}

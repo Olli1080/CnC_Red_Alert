@@ -70,9 +70,11 @@ extern "C" BOOL __cdecl Linear_Blit_To_Linear(void * thisptr, void * dest_ptr, i
 	int copy_height = dst_y1 - dst_y0;
 	if (copy_width <= 0 || copy_height <= 0) return FALSE;
 
-	unsigned char * src_base = (unsigned char *)src_vp->Get_Graphic_Buffer()->Get_Buffer() + src_vp->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * src_base = (unsigned char *)src_vp->Get_Offset();
 	int src_stride = src_width + src_vp->Get_XAdd() + src_vp->Get_Pitch();
-	unsigned char * dst_base = (unsigned char *)dst_vp->Get_Graphic_Buffer()->Get_Buffer() + dst_vp->Get_Offset();
+	unsigned char * dst_base = (unsigned char *)dst_vp->Get_Offset();
 	int dst_stride = dst_width + dst_vp->Get_XAdd() + dst_vp->Get_Pitch();
 
 	unsigned char * src_first_row = src_base + (long)src_y0 * src_stride + src_x0;

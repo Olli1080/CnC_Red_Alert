@@ -139,7 +139,9 @@ void __cdecl Buffer_Draw_Stamp(void const * thisptr, void const * icondata, int 
 	GraphicViewPortClass * viewport = (GraphicViewPortClass *)thisptr;
 	int stride = viewport->Get_Width() + viewport->Get_XAdd() + viewport->Get_Pitch();
 
-	unsigned char * dest = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * dest = (unsigned char *)viewport->Get_Offset();
 	dest += (long)y_pixel * stride + x_pixel;
 
 	unsigned char const * src = StampPtr + (long)icon * IconSize;
@@ -228,7 +230,9 @@ void __cdecl Buffer_Draw_Stamp_Clip(void const * thisptr, void const * icondata,
 	GraphicViewPortClass * viewport = (GraphicViewPortClass *)thisptr;
 	int stride = viewport->Get_Width() + viewport->Get_XAdd() + viewport->Get_Pitch();
 
-	unsigned char * dest = (unsigned char *)viewport->Get_Graphic_Buffer()->Get_Buffer() + viewport->Get_Offset();
+	// Offset alone is the complete pixel-data pointer - see CLEAR.CPP's comment. Adding
+	// Get_Buffer() on top (the original mistake here) double-counts the pointer.
+	unsigned char * dest = (unsigned char *)viewport->Get_Offset();
 	dest += (long)y_pixel * stride + x_pixel;
 
 	if (remap) {
