@@ -296,4 +296,24 @@ int DynamicVectorClass<T>::Delete(int index)
 	return(false);
 }
 
+/*
+**	Explicit instantiation for every concrete T actually used as a DynamicVectorClass<T>, beyond
+**	the handful FUNCTION.H already forces correctly (CCPtr<TeamTypeClass>, TeamMissionClass *,
+**	EventChoiceClass *, ActionChoiceClass *, EgoClass *) - see VECTOR.CPP's matching comment for
+**	why the base VectorClass<T> needs its own separate instantiation too (in VECTOR.CPP, not here).
+*/
+template class DynamicVectorClass<char *>;
+template class DynamicVectorClass<char const *>;
+template class DynamicVectorClass<unsigned char *>;
+template class DynamicVectorClass<void *>;
+template class DynamicVectorClass<BaseNodeClass>;
+template class DynamicVectorClass<FileEntryClass *>;
+template class DynamicVectorClass<MultiMission *>;
+template class DynamicVectorClass<ObjectClass *>;
+template class DynamicVectorClass<PhoneEntryClass *>;
+template class DynamicVectorClass<TriggerClass *>;
+template class DynamicVectorClass<NodeNameTag *>;
+template class DynamicVectorClass<RemapControlType *>;
+template class DynamicVectorClass<WinsockInterfaceClass::tWinsockBufferType *>;
+
 /************************** end of dynavec.cpp *****************************/

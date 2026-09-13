@@ -37,6 +37,17 @@
 
 #include <gbuffer.h>
 
+// Moved above the class (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md) so the friend
+// declarations below can refer to these exact, already-declared extern "C" functions rather than
+// implicitly declaring new, different-linkage entities of the same name - the C++ replacements for
+// these (WWMOUSE.CPP) need access to WWMouseClass's private cursor/buffer fields, matching how the
+// original assembly read them via raw struct-offset access into the same layout.
+extern "C" {
+	 void __cdecl Mouse_Shadow_Buffer(void *thisptr, GraphicViewPortClass *srcdst, void *buffer, int x, int y, int hotx, int hoty, int store);
+	 void __cdecl Draw_Mouse(void *thisptr, GraphicViewPortClass *srcdst, int x, int y);
+	 void * __cdecl ASM_Set_Mouse_Cursor(void * thisptr, int hotspotx, int hotspoty, VOID *cursor);
+};
+
 class WWMouseClass {
 	public:
 		WWMouseClass(GraphicViewPortClass *scr, int mouse_max_width, int mouse_max_height);
@@ -106,12 +117,9 @@ class WWMouseClass {
 		CRITICAL_SECTION		MouseCriticalSection;  // Control for mouse re-enterancy
 		unsigned					TimerHandle;
 
-};
-
-extern "C" {
-	 void __cdecl Mouse_Shadow_Buffer(void *thisptr, GraphicViewPortClass *srcdst, void *buffer, int x, int y, int hotx, int hoty, int store);
-	 void __cdecl Draw_Mouse(void *thisptr, GraphicViewPortClass *srcdst, int x, int y);
-	 void * __cdecl ASM_Set_Mouse_Cursor(void * thisptr, int hotspotx, int hotspoty, VOID *cursor);
+		friend void Mouse_Shadow_Buffer(void *thisptr, GraphicViewPortClass *srcdst, void *buffer, int x, int y, int hotx, int hoty, int store);
+		friend void Draw_Mouse(void *thisptr, GraphicViewPortClass *srcdst, int x, int y);
+		friend void * ASM_Set_Mouse_Cursor(void * thisptr, int hotspotx, int hotspoty, VOID *cursor);
 };
 
 void Hide_Mouse(void);

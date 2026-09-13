@@ -2133,7 +2133,9 @@ long Sample_Length(void const *sample)
  * HISTORY:                                                                                    *
  *    2/1/96 12:28PM ST : Created                                                              *
  *=============================================================================================*/
-extern BOOL GameInFocus;
+// See WIN32LIB/DRAWBUFF/GBUFFER.CPP's matching comment: this must match CODE/GLOBALS.CPP's real
+// `bool GameInFocus` definition, not the Win32 BOOL(=int) typedef.
+extern bool GameInFocus;
 BOOL Start_Primary_Sound_Buffer (BOOL forced)
 {
 	DWORD status;

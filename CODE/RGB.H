@@ -43,33 +43,14 @@ class HSVClass;
 
 #ifndef OUTPORTB
 #define OUTPORTB
-extern void outportb(int port, unsigned char data);
-#pragma aux outportb parm [edx] [al] =		\
-		"out	dx,al"
-
-extern void outport(int port, unsigned short data);
-#pragma aux outport parm [edx] [ax] =		\
-		"out	dx,al"		\
-		"inc	dx"			\
-		"mov	al,ah"		\
-		"out	dx,al"
+// See JSHELL.H's matching declaration for why these are no-ops under any Win32-era build, not
+// just this modernized one (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+inline void outportb(int, unsigned char) {}
+inline void outport(int, unsigned short) {}
 #endif
 
-extern void outrgb(unsigned char red, unsigned char green, unsigned char blue);
-#pragma aux outrgb parm [al] [bl] [cl] \
-		modify [dx al] = \
-		"mov	dx,03C9h"	\
-		"out	dx,al"		\
-		"jmp	e1"			\
-		"e1:"					\
-		"mov	al,bl" 		\
-		"out	dx,al"		\
-		"jmp	e2"			\
-		"e2:" 				\
-		"mov	al,cl" 		\
-		"out	dx,al"		\
-		"jmp	e3"			\
-		"e3:"
+// Raw VGA DAC port I/O, same dead-on-Win32 status as outportb/outport above.
+inline void outrgb(unsigned char, unsigned char, unsigned char) {}
 
 /*
 **	Each color entry is represented by this class. It holds the values for the color

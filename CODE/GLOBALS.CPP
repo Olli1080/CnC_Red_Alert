@@ -347,6 +347,13 @@ bool AllowVoice = true;
 */
 long Frame = 0;
 
+// Declared `extern "C" { extern long RandNumb; }` in INIT.CPP but never defined anywhere in this
+// GPL release - genuine gap, not an ASM dependency (sub-milestone 1c -
+// Agent/plans_done/code_1c_port_log.md). Needs extern "C" here too, matching INIT.CPP's own
+// extern "C" wrapper - otherwise this gets ordinary C++ (mangled) linkage instead and the two
+// declarations refer to different linker symbols.
+extern "C" long RandNumb = 0;
+
 
 /***************************************************************************
 **	These globals are constantly monitored to determine if the player

@@ -106,6 +106,14 @@ typedef struct tIconSetType{
 
 extern	IconCacheClass	CachedIcons[MAX_CACHED_ICONS];
 
+// Defined in ICONCACH.CPP, consumed by STAMP.CPP's Is_Icon_Cached (sub-milestone 1c -
+// Agent/plans_done/code_1c_port_log.md) - shared here so both translation units agree on one
+// declaration instead of each repeating it independently.
+extern "C" {
+extern IconSetType IconSetList[MAX_ICON_SETS];
+extern short IconCacheLookup[MAX_LOOKUP_ENTRIES];
+}
+
 extern void Invalidate_Cached_Icons (void);
 extern void Restore_Cached_Icons (void);
 extern void Register_Icon_Set (void *icon_data , BOOL pre_cache);

@@ -402,30 +402,22 @@ COORDINATE Coord_Scatter(COORDINATE coord, unsigned distance, bool lock)
 	return(newcoord);
 }
 
-extern int calcx(signed short, short distance);
-#pragma aux calcx parm [ax] [bx] \
-	modify [eax dx] \
-	value [eax]		= 				\
-	"imul bx"						\
-	"shl	ax,1"						\
-	"rcl	dx,1"						\
-	"mov	al,ah"					\
-	"mov	ah,dl"					\
-	"cwd"								\
-//	"and	eax,0FFFFh";
+// Watcom `#pragma aux` inline assembly, silently ignored (bodyless) under MSVC/clang. The ASM
+// computes a signed 16x16 multiply (cosine/sine table entry * distance), shifts the 32-bit product
+// left by 1 bit, extracts bits [23:8] (equivalent to product >> 7), truncates to 16 bits, and
+// sign-extends back to a 32-bit int - i.e. (short)((cosine * distance) >> 7) widened to int. This
+// hasn't yet been verified bit-exact against real gameplay (needs real game assets to test
+// movement/pathing precision - see Agent/plans_done/code_1c_port_log.md) but is a direct,
+// unsimplified transcription of the original arithmetic.
+inline int calcx(signed short cosine, short distance)
+{
+	return (int)(short)(((int)cosine * (int)distance) >> 7);
+}
 
-extern int calcy(signed short, short distance);
-#pragma aux calcy parm [ax] [bx] \
-	modify [eax dx] \
-	value [eax]		= 				\
-	"imul bx"						\
-	"shl	ax,1"						\
-	"rcl	dx,1"						\
-	"mov	al,ah"					\
-	"mov	ah,dl"					\
-	"cwd"								\
-	"neg	eax";
-//	"and	eax,0FFFFh"				\
+inline int calcy(signed short sine, short distance)
+{
+	return -(int)(short)(((int)sine * (int)distance) >> 7);
+}
 
 void Move_Point(short &x, short &y, register DirType dir, unsigned short distance)
 {

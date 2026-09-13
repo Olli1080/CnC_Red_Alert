@@ -630,3 +630,46 @@ void TFixedIHeapClass<T>::Decode_Pointers(void)
 		Ptr(i)->Decode_Pointers();
 	}
 }
+
+/*
+**	Explicit instantiation for every concrete T actually used as a TFixedIHeapClass<T> (the "Type
+**	Heaps" declared in EXTERNS.H/defined in GLOBALS.CPP - Houses, Units, Buildings, etc). Under
+**	Watcom's eager whole-class template model, simply defining a global object of this type forced
+**	every member (including these Save/Load/Code_Pointers/Decode_Pointers bodies) to be
+**	instantiated; MSVC/clang only instantiate members actually referenced from a TU that can see
+**	both the declaration and the definition, and nothing in this codebase calls these particular
+**	virtual members directly by name (only polymorphically, via a FixedIHeapClass base pointer, in
+**	SAVELOAD.CPP) - so they were never being instantiated anywhere. See
+**	Agent/plans_done/code_1c_port_log.md.
+*/
+template class TFixedIHeapClass<AircraftClass>;
+template class TFixedIHeapClass<AnimClass>;
+template class TFixedIHeapClass<BuildingClass>;
+template class TFixedIHeapClass<BulletClass>;
+template class TFixedIHeapClass<FactoryClass>;
+template class TFixedIHeapClass<HouseClass>;
+template class TFixedIHeapClass<InfantryClass>;
+template class TFixedIHeapClass<OverlayClass>;
+template class TFixedIHeapClass<SmudgeClass>;
+template class TFixedIHeapClass<TeamClass>;
+template class TFixedIHeapClass<TeamTypeClass>;
+template class TFixedIHeapClass<TemplateClass>;
+template class TFixedIHeapClass<TerrainClass>;
+template class TFixedIHeapClass<TriggerClass>;
+template class TFixedIHeapClass<UnitClass>;
+template class TFixedIHeapClass<VesselClass>;
+template class TFixedIHeapClass<TriggerTypeClass>;
+template class TFixedIHeapClass<HouseTypeClass>;
+template class TFixedIHeapClass<BuildingTypeClass>;
+template class TFixedIHeapClass<AircraftTypeClass>;
+template class TFixedIHeapClass<InfantryTypeClass>;
+template class TFixedIHeapClass<BulletTypeClass>;
+template class TFixedIHeapClass<AnimTypeClass>;
+template class TFixedIHeapClass<UnitTypeClass>;
+template class TFixedIHeapClass<VesselTypeClass>;
+template class TFixedIHeapClass<TemplateTypeClass>;
+template class TFixedIHeapClass<TerrainTypeClass>;
+template class TFixedIHeapClass<OverlayTypeClass>;
+template class TFixedIHeapClass<SmudgeTypeClass>;
+template class TFixedIHeapClass<WeaponTypeClass>;
+template class TFixedIHeapClass<WarheadTypeClass>;

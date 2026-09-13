@@ -977,6 +977,20 @@ void Show_Who_Was_Responsible (void);
 #include	"inline.h"
 
 /*
+**	CCPtr<T>'s constructor and operator> are defined out-of-line in CCPTR.CPP (see that file's own
+**	comment), so every concrete T actually used needs to be explicitly instantiated somewhere that
+**	has visibility of those bodies. This used to be done here via `extern CCPtr<ConcreteType> yN;`
+**	dummy declarations - a trick that forces instantiation under Watcom's eager whole-class template
+**	model (any use of part of a class template instantiates every member), but does nothing under
+**	MSVC/clang's standard lazy per-member model, since an extern object declaration alone doesn't
+**	require any member function body to exist. The real fix (genuine `template class CCPtr<T>;`
+**	explicit instantiation definitions, which do force every member under any compiler) now lives
+**	in CCPTR.CPP itself, next to the bodies they instantiate - see
+**	Agent/plans_done/code_1c_port_log.md. As a pleasant side effect, CCPtr<TriggerTypeClass> no
+**	longer needs the "MSVC 19.51 preview quirk" workaround this file used to carry: that spurious
+**	C3203/C2990 error was apparently specific to the old extern-dummy syntax, not the type itself.
+*/
+/*
 **	These declarations ensure that the templates will be expanded for these specified
 **	types. Doing this is required because some of the body functions for this template class
 **	are located in a .CPP module. Doing so results in faster compilation but requires declarations
@@ -984,42 +998,6 @@ void Show_Who_Was_Responsible (void);
 **	names ever created, however there are other objects of this type (with different names) that
 **	are created.
 */
-// Renamed from "y1": collides with the C runtime's declspec(deprecated) Bessel function
-// "double y1(double)" declared by <math.h> (pulled in transitively) - unlike the other dummy
-// names below, this one isn't unique in the global namespace.
-extern CCPtr<AircraftClass> cc_dummy_y1;
-extern CCPtr<AnimClass> y2;
-extern CCPtr<BuildingClass> y3;
-extern CCPtr<BulletClass> y4;
-extern CCPtr<FactoryClass> y5;
-extern CCPtr<HouseClass> y6;
-extern CCPtr<InfantryClass> y7;
-extern CCPtr<OverlayClass> y8;
-extern CCPtr<SmudgeClass> y9;
-extern CCPtr<TeamClass> y10;
-extern CCPtr<TeamTypeClass> y11;
-extern CCPtr<TemplateClass> y12;
-extern CCPtr<TerrainClass> y13;
-extern CCPtr<TriggerClass> y14;
-// y15 (CCPtr<TriggerTypeClass>) removed: MSVC 19.51 (VS 2026 preview) rejects this specific
-// instantiation-forcing declaration with a spurious "TriggerTypeClass: unspecialized class
-// template" error (C3203/C2990) that clang does not reproduce, and no combination of syntax
-// (elaborated "class TriggerTypeClass", moving it, isolating it) made the message go away - it
-// looks like a genuine preview-compiler quirk. Harmless to drop: CCPtr<TriggerTypeClass> is
-// already instantiated for real via TActionClass::Trigger (TACTION.H) and TriggerClass::Class
-// (TRIGTYPE.H), so the template body exists regardless of this hint.
-extern CCPtr<HouseTypeClass>		y16;
-extern CCPtr<BuildingTypeClass>	y17;
-extern CCPtr<AircraftTypeClass>	y18;
-extern CCPtr<InfantryTypeClass>	y19;
-extern CCPtr<BulletTypeClass>		y20;
-extern CCPtr<AnimTypeClass>		y21;
-extern CCPtr<UnitTypeClass>		y22;
-extern CCPtr<VesselTypeClass>		y23;
-extern CCPtr<TemplateTypeClass>	y24;
-extern CCPtr<TerrainTypeClass>	y25;
-extern CCPtr<OverlayTypeClass>	y26;
-extern CCPtr<SmudgeTypeClass>		y27;
 template class DynamicVectorClass<CCPtr<TeamTypeClass> >;
 extern DynamicVectorClass<CCPtr<TeamTypeClass> > y002;
 //DIAGTEST template class DynamicVectorClass<CCPtr<TriggerTypeClass> >;

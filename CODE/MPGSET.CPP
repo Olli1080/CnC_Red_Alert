@@ -500,7 +500,12 @@ void MPGSettings::Dialog(void)
 					Theme.Fade_Out();
 					Hide_Mouse();
 					VisiblePage.Clear();
+					// MPEGMOVIE is excluded for sub-milestone 1c (see DEFINES.H's own note next to
+					// the #define) along with the rest of movie playback - Agent/plans_done/
+					// code_1c_port_log.md.
+					#ifdef MPEGMOVIE
 					PlayMpegMovie("acrop");
+					#endif
 					Keyboard->Clear();
 					Show_Mouse();
 					Theme.Queue_Song(THEME_CRUS);

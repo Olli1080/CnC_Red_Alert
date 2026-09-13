@@ -181,6 +181,10 @@ template<class T> inline void swap(T &value1, T &value2)
 	value1 = value2;
 	value2 = temp;
 }
+// NOT touched: these two don't even match the template above (by-value int/long params and a
+// non-void return, versus the template's by-reference T& params and void return) - they're inert,
+// uncalled leftovers from the original source, not a case of the shadowing bug fixed elsewhere in
+// this file. Left exactly as-is (still bodyless/unlinkable, but nothing calls them).
 int swap(int, int);
 long swap(long, long);
 
@@ -191,9 +195,24 @@ T Bound(T original, T minval, T maxval)
 	if (original > maxval) return(maxval);
 	return(original);
 };
-int Bound(signed int, signed int, signed int);
-unsigned Bound(unsigned, unsigned, unsigned);
-long Bound(long, long, long);
+inline int Bound(signed int original, signed int minval, signed int maxval)
+{
+	if (original < minval) return minval;
+	if (original > maxval) return maxval;
+	return original;
+}
+inline unsigned Bound(unsigned original, unsigned minval, unsigned maxval)
+{
+	if (original < minval) return minval;
+	if (original > maxval) return maxval;
+	return original;
+}
+inline long Bound(long original, long minval, long maxval)
+{
+	if (original < minval) return minval;
+	if (original > maxval) return maxval;
+	return original;
+}
 
 template<class T>
 T _rotl(T X, int n)
@@ -212,61 +231,73 @@ T _rotl(T X, int n)
 
 /*
 **	The shape flags are likely to be "or"ed together and other such bitwise
-**	manipulations. These instatiated operator templates allow this.
+**	manipulations. These force explicit instantiation of the operator templates above for this
+**	type - originally written as plain (bodyless) declarations, which older compilers apparently
+**	treated as instantiation requests against the matching template, but which strict modern
+**	compilers instead treat as separate, never-defined non-template overloads that shadow the
+**	template and never link (see Agent/plans_done/code_1c_port_log.md).
 */
-inline ShapeFlags_Type operator |(ShapeFlags_Type, ShapeFlags_Type);
-inline ShapeFlags_Type operator &(ShapeFlags_Type, ShapeFlags_Type);
-inline ShapeFlags_Type operator ~(ShapeFlags_Type);
+template ShapeFlags_Type operator |(ShapeFlags_Type, ShapeFlags_Type);
+template ShapeFlags_Type operator &(ShapeFlags_Type, ShapeFlags_Type);
+template ShapeFlags_Type operator ~(ShapeFlags_Type);
 
 
-void Set_Bit(void * array, int bit, int value);
-#pragma aux Set_Bit parm [esi] [ecx] [eax] \
-	modify [esi ebx] = 			\
-	"mov	ebx,ecx"					\
-	"shr	ebx,5"					\
-	"and	ecx,01Fh"				\
-	"btr	[esi+ebx*4],ecx"		\
-	"or	eax,eax"					\
-	"jz	ok"						\
-	"bts	[esi+ebx*4],ecx"		\
-	"ok:"
+/*
+**	These were Watcom `#pragma aux` inline-assembly bodies (real-mode-era bit-array primitives on
+**	32-bit words), which MSVC/clang silently ignore as an unrecognized pragma - leaving the
+**	declarations bodyless and unresolved at link time. Rewritten here as plain portable C++ with
+**	identical semantics (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+*/
+inline void Set_Bit(void * array, int bit, int value)
+{
+	unsigned & word = ((unsigned *)array)[bit >> 5];
+	unsigned mask = 1u << (bit & 0x1F);
+	if (value) {
+		word |= mask;
+	} else {
+		word &= ~mask;
+	}
+}
 
-int Get_Bit(void const * array, int bit);
-#pragma aux Get_Bit parm [esi] [eax] \
-	modify [esi ebx] \
-	value [eax]		= 				\
-	"mov	ebx,eax"					\
-	"shr	ebx,5"					\
-	"and	eax,01Fh"				\
-	"bt	[esi+ebx*4],eax"		\
-	"setc	al"
+inline int Get_Bit(void const * array, int bit)
+{
+	unsigned word = ((unsigned const *)array)[bit >> 5];
+	return (word >> (bit & 0x1F)) & 1;
+}
 
-int First_True_Bit(void const * array);
-#pragma aux First_True_Bit parm [esi] \
-	modify [esi ebx] \
-	value [eax]		= 				\
-	"mov	eax,-32"					\
-	"again:"							\
-	"add	eax,32"					\
-	"mov	ebx,[esi]"				\
-	"add	esi,4"					\
-	"bsf	ebx,ebx"					\
-	"jz	again"					\
-	"add	eax,ebx"
+inline int First_True_Bit(void const * array)
+{
+	unsigned const * ptr = (unsigned const *)array;
+	int base = 0;
+	while (*ptr == 0) {
+		ptr++;
+		base += 32;
+	}
+	unsigned word = *ptr;
+	int index = 0;
+	while (!(word & 1)) {
+		word >>= 1;
+		index++;
+	}
+	return base + index;
+}
 
-int First_False_Bit(void const * array);
-#pragma aux First_False_Bit parm [esi] \
-	modify [esi ebx] \
-	value [eax]		= 				\
-	"mov	eax,-32"					\
-	"again:"							\
-	"add	eax,32"					\
-	"mov	ebx,[esi]"				\
-	"not	ebx"						\
-	"add	esi,4"					\
-	"bsf	ebx,ebx"					\
-	"jz	again"					\
-	"add	eax,ebx"
+inline int First_False_Bit(void const * array)
+{
+	unsigned const * ptr = (unsigned const *)array;
+	int base = 0;
+	while (~*ptr == 0) {
+		ptr++;
+		base += 32;
+	}
+	unsigned word = ~*ptr;
+	int index = 0;
+	while (!(word & 1)) {
+		word >>= 1;
+		index++;
+	}
+	return base + index;
+}
 
 #ifdef OBSOLETE
 extern int Bound(int original, int min, int max);
@@ -301,43 +332,34 @@ extern unsigned Bound(unsigned original, unsigned min, unsigned max);
 #endif
 
 
-unsigned Fixed_To_Cardinal(unsigned base, unsigned fixed);
-#pragma aux Fixed_To_Cardinal parm [eax] [edx] \
-	modify [edx] \
-	value [eax]		= 				\
-	"mul	edx"						\
-	"add	eax,080h"				\
-	"test	eax,0FF000000h"		\
-	"jz	ok"						\
-	"mov	eax,000FFFFFFh"		\
-	"ok:"								\
-	"shr	eax,8"
+// Watcom `#pragma aux` inline assembly, silently ignored (bodyless) under MSVC/clang - rewritten
+// as plain C++ with identical semantics, including the original's 32-bit-truncating intermediate
+// values (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+inline unsigned Fixed_To_Cardinal(unsigned base, unsigned fixed)
+{
+	unsigned product = base * fixed + 0x80;
+	if (product & 0xFF000000) product = 0xFFFFFF;
+	return product >> 8;
+}
 
-
-unsigned Cardinal_To_Fixed(unsigned base, unsigned cardinal);
-#pragma aux Cardinal_To_Fixed parm [ebx] [eax] \
-	modify [edx] \
-	value [eax]		= 				\
-	"or	ebx,ebx"					\
-	"jz	fini"						\
-	"shl	eax,8"					\
-	"xor	edx,edx"					\
-	"div	ebx"						\
-	"fini:"
+inline unsigned Cardinal_To_Fixed(unsigned base, unsigned cardinal)
+{
+	if (base == 0) return cardinal;
+	unsigned shifted = cardinal << 8;
+	return shifted / base;
+}
 
 
 #ifndef OUTPORTB
 #define OUTPORTB
-extern void outportb(int port, unsigned char data);
-#pragma aux outportb parm [edx] [al] =		\
-		"out	dx,al"
-
-extern void outport(int port, unsigned short data);
-#pragma aux outport parm [edx] [ax] =		\
-		"out	dx,al"		\
-		"inc	dx"			\
-		"mov	al,ah"		\
-		"out	dx,al"
+// Raw x86 `out` port I/O (real-mode/DOS-era direct VGA register access) - meaningless on modern
+// Windows regardless of toolchain, since usermode code cannot execute privileged I/O instructions
+// at all (this would fault). Kept as inline no-ops rather than removing the call sites: the actual
+// palette hardware programming already happens through IDirectDraw::CreatePalette/SetEntries (see
+// WIN32LIB/MISC/DDRAW.CPP), so these calls are dead code on any Win32-era build already, not
+// something newly broken by this modernization (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+inline void outportb(int, unsigned char) {}
+inline void outport(int, unsigned short) {}
 #endif
 
 

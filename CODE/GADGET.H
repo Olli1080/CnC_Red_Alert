@@ -252,9 +252,10 @@ class GadgetClass : public LinkClass
 		virtual int Clicked_On(KeyNumType & key, unsigned flags, int x, int y);
 };
 
-inline GadgetClass::FlagEnum operator |(GadgetClass::FlagEnum, GadgetClass::FlagEnum);
-inline GadgetClass::FlagEnum operator &(GadgetClass::FlagEnum, GadgetClass::FlagEnum);
-inline GadgetClass::FlagEnum operator ~(GadgetClass::FlagEnum);
+// Explicit instantiation fix, same as ThreatType/ShapeFlags_Type (Agent/plans_done/code_1c_port_log.md).
+template GadgetClass::FlagEnum operator |(GadgetClass::FlagEnum, GadgetClass::FlagEnum);
+template GadgetClass::FlagEnum operator &(GadgetClass::FlagEnum, GadgetClass::FlagEnum);
+template GadgetClass::FlagEnum operator ~(GadgetClass::FlagEnum);
 
 
 #endif

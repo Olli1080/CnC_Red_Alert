@@ -66,8 +66,13 @@ void Print_Error_Exit(char * string);
 
 #ifdef WIN32
 //WinTimerClass * WinTimer;
-extern void Create_Main_Window ( HANDLE instance , int command_show , int width , int height);
-extern bool RA95AlreadyRunning;
+// HANDLE and HINSTANCE are distinct DECLARE_HANDLE opaque types under Win64 (unlike Win32, where
+// both were just `void*` and interchangeable) - this must match WINSTUB.CPP's real definition,
+// which already uses HINSTANCE (see the sub-milestone 1b port log's Win64 API/type drift notes).
+extern void Create_Main_Window ( HINSTANCE instance , int command_show , int width , int height);
+// CCDDE.CPP defines this as `BOOL` (=int), not `bool` - same distinct-mangled-type bug as
+// GameInFocus (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+extern BOOL RA95AlreadyRunning;
 HINSTANCE	ProgramInstance;
 void Check_Use_Compressed_Shapes (void);
 void Read_Setup_Options(RawFileClass *config_file);

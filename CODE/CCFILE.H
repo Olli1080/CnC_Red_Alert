@@ -103,5 +103,9 @@ class CCFileClass : public CDFileClass
 };
 
 template class MixFileClass<CDFileClass>;
+// EXTERNS.H's `MFCD` typedef needs this second instantiation too (sub-milestone 1c -
+// Agent/plans_done/code_1c_port_log.md) - same template-instantiation-gap family as CCPtr/VectorClass
+// /DynamicVectorClass/TFixedIHeapClass elsewhere in this port.
+template class MixFileClass<CCFileClass>;
 
 #endif

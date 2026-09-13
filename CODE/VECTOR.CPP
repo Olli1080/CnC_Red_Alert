@@ -389,6 +389,34 @@ int VectorClass<T>::Resize(unsigned newsize, T const * array)
 	return(true);
 }
 
+/*
+**	Explicit instantiation for every concrete T actually used as a VectorClass<T> (directly, or as
+**	the base of a DynamicVectorClass<T> - explicitly instantiating the derived class template does
+**	NOT implicitly instantiate its base class template, so both need their own directive, each in
+**	the .cpp where its own member bodies are visible). See this file's own top-of-file comment and
+**	Agent/plans_done/code_1c_port_log.md for why these can't just be "used somewhere" under a
+**	standard-conforming compiler the way they apparently could under Watcom.
+*/
+template class VectorClass<char *>;
+template class VectorClass<char const *>;
+template class VectorClass<unsigned char *>;
+template class VectorClass<void *>;
+template class VectorClass<BaseNodeClass>;
+template class VectorClass<CellClass>;
+template class VectorClass<CCPtr<TeamTypeClass> >;
+template class VectorClass<ActionChoiceClass *>;
+template class VectorClass<EgoClass *>;
+template class VectorClass<EventChoiceClass *>;
+template class VectorClass<FileEntryClass *>;
+template class VectorClass<MultiMission *>;
+template class VectorClass<ObjectClass *>;
+template class VectorClass<PhoneEntryClass *>;
+template class VectorClass<TeamMissionClass *>;
+template class VectorClass<TriggerClass *>;
+template class VectorClass<NodeNameTag *>;
+template class VectorClass<RemapControlType *>;
+template class VectorClass<WinsockInterfaceClass::tWinsockBufferType *>;
+
 //----------------------------------------------------------------------------------------------
 
 /***********************************************************************************************

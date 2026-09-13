@@ -71,7 +71,11 @@ BOOL RA95AlreadyRunning = FALSE;		//Was there an instance of Red Alert 95 alread
 */
 extern HWND 			MainWindow;
 extern TimerClass	GameTimer;
-extern BOOL			GameTimerInUse;
+// STATS.CPP defines this as `bool`, not `BOOL` (=int) - MSVC's C++ name mangling encodes a global
+// variable's type in its decorated name, so a mismatched extern here links to a genuinely different
+// symbol name and is reported as unresolved (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md),
+// same root cause as the GameInFocus fix elsewhere in this port.
+extern bool			GameTimerInUse;
 extern void 			WWDebugString (char *string);
 
 

@@ -297,9 +297,17 @@ int RawFileClass::Open(int rights)
 		if (Handle == NULL_HANDLE) {
 
 #ifdef WIN32
-//			return(false);
+			// Sub-milestone 1c runtime fix (Agent/plans_done/code_1c_port_log.md): this used to
+			// fall through to `break; return(true);` below regardless of whether CreateFile
+			// actually succeeded - a real, pre-existing bug this GPL drop shipped with, made fatal
+			// here because RawFileClass::Error() is a no-op (it originally showed a Retry/Abort
+			// dialog; with no dialog and no return, a transient CreateFile failure - e.g. brief AV
+			// real-time-protection interference on a rapidly reopened file - turned into an
+			// infinite retry loop with no way out, discovered by actually running the built exe
+			// against real game data). Report the failure to the caller instead, matching this
+			// function's own documented "bool; Was the file opened successfully?" contract.
 			Error(GetLastError(), false, Filename);
-//			continue;
+			return(false);
 #else
 			/*
 			**	If this flag is set, then some hard error occurred. Just assume that the error
@@ -564,11 +572,13 @@ long RawFileClass::Read(void * buffer, long size)
 
 		SetErrorMode(SEM_FAILCRITICALERRORS);
 		if (!ReadFile(Handle, buffer, size, &(unsigned long&)bytesread, NULL)) {
-			size -= bytesread;
-			total += bytesread;
+			// Sub-milestone 1c runtime fix (Agent/plans_done/code_1c_port_log.md): same root cause
+			// as the Open() fix above - `continue` here used to retry a failed ReadFile forever,
+			// relying on Error() to show a Retry/Abort dialog that no longer exists (it's a no-op
+			// in this port). Give up and return whatever was actually read instead of spinning.
 			Error(GetLastError(), true, Filename);
 			SetErrorMode(0);
-			continue;
+			break;
 		}
 		SetErrorMode(0);
 		size -= bytesread;

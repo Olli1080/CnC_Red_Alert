@@ -133,7 +133,12 @@
 // Define DVD to turn on RADVD additions/changes - Denzil
 #ifdef DVD
 //#define INTERNET_OFF
-#define MPEGMOVIE
+// MPEGMOVIE pulls in MpgPlay/MpgPause/MpgResume/MpgSetCallback (MOVIE.H, declared DLLCALL /
+// dllimport) from an MPEG-playback DLL that doesn't exist anywhere in this GPL release - same
+// "exclude movie playback for sub-milestone 1c" decision as the VQA player (see VQASTUB.CPP),
+// just for this alternate movie codec (Agent/plans_done/code_1c_port_log.md). Revisit alongside
+// VQA/VQA32 wiring in a future sub-milestone.
+//#define MPEGMOVIE
 //#define MCIMPEG
 #endif
 
@@ -890,7 +895,10 @@ typedef enum ThemeType {
 	THEME_FIRST=0
 } ThemeType;
 
-inline ThemeType operator++(ThemeType &, int);
+// Same bodyless-declaration-shadows-template bug as ThreatType's operator|/&/~ above, but for the
+// generic postfix-increment template<class T> T operator++(T&,int) defined in JSHELL.H (sub-milestone
+// 1c - Agent/plans_done/code_1c_port_log.md). Fixed with genuine explicit instantiation.
+template ThemeType operator++(ThemeType &, int);
 
 
 /**********************************************************************
@@ -914,9 +922,12 @@ typedef enum ThreatType {
 	THREAT_FACTORIES=0x1000,	// Consider factories a greater target?
 	THREAT_BASE_DEFENSE=0x2000	// Consider base defense buildings a greater target?
 } ThreatType;
-inline ThreatType operator |(ThreatType, ThreatType);
-inline ThreatType operator &(ThreatType, ThreatType);
-inline ThreatType operator ~(ThreatType);
+// Explicit instantiation of JSHELL.H's operator templates for this type - see JSHELL.H's own
+// comment on ShapeFlags_Type for why this can't be a plain bodyless declaration under a strict
+// modern compiler (Agent/plans_done/code_1c_port_log.md).
+template ThreatType operator |(ThreatType, ThreatType);
+template ThreatType operator &(ThreatType, ThreatType);
+template ThreatType operator ~(ThreatType);
 
 #define THREAT_GROUND	(THREAT_VEHICLES|THREAT_BUILDINGS|THREAT_INFANTRY)
 
@@ -1160,7 +1171,8 @@ typedef enum HousesType {
 	HOUSE_FIRST=0
 } HousesType;
 
-inline HousesType operator++(HousesType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template HousesType operator++(HousesType &, int);
 
 #define	HOUSEF_ALLIES	(HOUSEF_ENGLAND|HOUSEF_SPAIN|HOUSEF_GREECE|HOUSEF_GERMANY|HOUSEF_FRANCE|HOUSEF_TURKEY|HOUSEF_GOOD)
 #define	HOUSEF_SOVIET	(HOUSEF_USSR|HOUSEF_UKRAINE|HOUSEF_BAD)
@@ -1237,7 +1249,8 @@ typedef enum ScenarioPlayerEnum
 	SCEN_PLAYER_FIRST = 0
 } ScenarioPlayerType;
 
-inline ScenarioPlayerType operator++(ScenarioPlayerType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template ScenarioPlayerType operator++(ScenarioPlayerType &, int);
 
 
 /**********************************************************************
@@ -1252,7 +1265,8 @@ typedef enum ScenarioDirEnum
 	SCEN_DIR_FIRST = 0
 } ScenarioDirType;
 
-inline ScenarioDirType operator++(ScenarioDirType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template ScenarioDirType operator++(ScenarioDirType &, int);
 
 
 /**********************************************************************
@@ -1270,7 +1284,8 @@ typedef enum ScenarioVarEnum
 	SCEN_VAR_FIRST = 0
 } ScenarioVarType;
 
-inline ScenarioVarType operator++(ScenarioVarType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template ScenarioVarType operator++(ScenarioVarType &, int);
 
 
 /**********************************************************************
@@ -1289,7 +1304,8 @@ typedef enum LayerType {
 	LAYER_FIRST=0
 } LayerType;
 
-inline LayerType operator++(LayerType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template LayerType operator++(LayerType &, int);
 
 
 /**********************************************************************
@@ -1322,7 +1338,8 @@ typedef enum BulletType {
 	BULLET_FIRST=0
 } BulletType;
 
-inline BulletType operator++(BulletType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template BulletType operator++(BulletType &, int);
 
 
 /**********************************************************************
@@ -1438,7 +1455,8 @@ typedef enum StructType {
 	STRUCT_FIRST=0
 } StructType;
 
-inline StructType operator++(StructType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template StructType operator++(StructType &, int);
 
 #define	STRUCTF_NONE				0L
 #define	STRUCTF_ADVANCED_TECH	(1L << STRUCT_ADVANCED_TECH)
@@ -1512,7 +1530,8 @@ typedef enum OverlayType {
 	OVERLAY_FIRST=0
 } OverlayType;
 
-inline OverlayType operator++(OverlayType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template OverlayType operator++(OverlayType &, int);
 
 
 /**********************************************************************
@@ -1563,7 +1582,8 @@ typedef enum InfantryType{
 
 #define INFANTRYF_DOG	(1L << INFANTRY_DOG)
 
-inline InfantryType operator++(InfantryType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template InfantryType operator++(InfantryType &, int);
 
 
 /**********************************************************************
@@ -1612,7 +1632,8 @@ typedef enum UnitType{
 #endif
 } UnitType;
 
-inline UnitType operator++(UnitType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template UnitType operator++(UnitType &, int);
 
 #define	UNITF_HTANK			(1L<<UNIT_HTANK)
 #define	UNITF_MTANK			(1L<<UNIT_MTANK)
@@ -1654,7 +1675,8 @@ typedef enum VesselType{
 #endif
 } VesselType;
 
-inline VesselType operator++(VesselType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template VesselType operator++(VesselType &, int);
 
 #define	VESSELF_SS			(1L<<VESSEL_SS)
 #define	VESSELF_DD			(1L<<VESSEL_DD)
@@ -1689,7 +1711,8 @@ typedef enum AircraftType {
 #define	AIRCRAFTF_LONGBOW		(1L << AIRCRAFT_LONGBOW)
 #define	AIRCRAFTF_HIND			(1L << AIRCRAFT_HIND)
 
-inline AircraftType operator++(AircraftType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template AircraftType operator++(AircraftType &, int);
 
 
 /**********************************************************************
@@ -2113,7 +2136,8 @@ typedef enum TemplateType {
 	TEMPLATE_FIRST=0
 } TemplateType;
 
-inline TemplateType operator++(TemplateType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template TemplateType operator++(TemplateType &, int);
 
 
 /**********************************************************************
@@ -2166,7 +2190,8 @@ typedef enum TerrainType {
 	TERRAIN_FIRST=0
 } TerrainType;
 
-inline TerrainType operator++(TerrainType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template TerrainType operator++(TerrainType &, int);
 
 
 /**********************************************************************
@@ -2196,7 +2221,8 @@ typedef enum SmudgeType {
 	SMUDGE_FIRST=0
 } SmudgeType;
 
-inline SmudgeType operator++(SmudgeType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template SmudgeType operator++(SmudgeType &, int);
 
 
 /**********************************************************************
@@ -2295,7 +2321,8 @@ typedef enum AnimType {
 } AnimType;
 
 
-inline AnimType operator++(AnimType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template AnimType operator++(AnimType &, int);
 
 
 /****************************************************************************
@@ -2330,7 +2357,8 @@ typedef enum DoType {
 	DO_FIRST=0
 } DoType;
 
-inline DoType operator++(DoType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template DoType operator++(DoType &, int);
 
 /*
 **	This structure is associated with each maneuver type. It tells whether the
@@ -2815,9 +2843,10 @@ typedef enum TextPrintType {
 	TPF_USE_GRAD_PAL	=0x4000		// Use a gradient palette based on fore color
 } TextPrintType;
 
-inline TextPrintType operator |(TextPrintType, TextPrintType);
-inline TextPrintType operator &(TextPrintType, TextPrintType);
-inline TextPrintType operator ~(TextPrintType);
+// Same explicit-instantiation fix as ThreatType above.
+template TextPrintType operator |(TextPrintType, TextPrintType);
+template TextPrintType operator &(TextPrintType, TextPrintType);
+template TextPrintType operator ~(TextPrintType);
 
 // Standard button text print flags.
 #define TPF_BUTTON	(TPF_CENTER|TPF_6PT_GRAD|TPF_NOSHADOW)
@@ -2883,7 +2912,8 @@ typedef enum TheaterType {
 	THEATER_FIRST=0
 } TheaterType;
 
-inline TheaterType operator++(TheaterType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template TheaterType operator++(TheaterType &, int);
 
 #define	THEATERF_TEMPERATE		(1<<THEATER_TEMPERATE)
 #define	THEATERF_SNOW				(1<<THEATER_SNOW)
@@ -2916,7 +2946,8 @@ typedef enum BSizeType {
 	BSIZE_COUNT
 } BSizeType;
 
-inline BSizeType operator++(BSizeType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template BSizeType operator++(BSizeType &, int);
 
 
 /**********************************************************************
@@ -2971,7 +3002,8 @@ typedef enum FacingType {
 	FACING_FIRST=0
 } FacingType;
 
-inline FacingType operator++(FacingType &, int);
+// Same operator++ explicit-instantiation fix as ThemeType above.
+template FacingType operator++(FacingType &, int);
 inline FacingType operator + (FacingType f1, FacingType f2)
 {
 	return (FacingType)(((int)f1 + (int)f2) & 0x07);

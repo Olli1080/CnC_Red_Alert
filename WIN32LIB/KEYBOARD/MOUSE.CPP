@@ -38,7 +38,9 @@
 
 static WWMouseClass *_Mouse=NULL;
 void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD_PTR user, DWORD_PTR  res2, DWORD_PTR  res3 );
-extern BOOL GameInFocus;
+// See WIN32LIB/DRAWBUFF/GBUFFER.CPP's matching comment: this must match CODE/GLOBALS.CPP's real
+// `bool GameInFocus` definition, not the Win32 BOOL(=int) typedef.
+extern bool GameInFocus;
 
 
 /***********************************************************************************************

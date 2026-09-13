@@ -47,6 +47,13 @@
 
 #pragma warn -inl
 
+// Forward declaration needed so the friend declaration below (sub-milestone 1c -
+// Agent/plans_done/code_1c_port_log.md) can name this exact template specialization instead of
+// accidentally declaring an unrelated, never-defined ordinary friend function that shadows it -
+// the same "bodyless declaration shadows the real template" bug pattern seen elsewhere in this
+// port, just introduced here via friend injection instead of a plain free-function declaration.
+template<class T> T Generate_Prime(Straw & rng, int pbits, T const *);
+
 template<int PRECISION>
 class Int {
 	public:
@@ -184,7 +191,10 @@ class Int {
 		// The default argument was dropped: a friend declaration that is not itself a definition
 		// cannot introduce a default argument (ill-formed, though old compilers tolerated it) -
 		// and no call site actually relies on it (both real callers in PK.CPP pass all 3 args).
-		friend Int<PRECISION> Generate_Prime(Straw & rng, int pbits, Int<PRECISION> const *);
+		friend Int<PRECISION> Generate_Prime<Int<PRECISION> >(Straw & rng, int pbits, Int<PRECISION> const *);
+		// Gcd is never called anywhere in the codebase (dead code) - left as a plain, never-defined
+		// friend declaration rather than converted to the same explicit-specialization-friend fix,
+		// since there is no real generic Gcd template forward-declared to bind it to.
 		friend Int<PRECISION> Gcd(const Int<PRECISION> & a, const Int<PRECISION> & b);
 //		friend bool NextPrime(Int<PRECISION> & p, const Int<PRECISION> & max, bool blumInt=false);
 //		friend Int<PRECISION> a_exp_b_mod_pq(const Int<PRECISION> & a, const Int<PRECISION> & ep, const Int<PRECISION> & eq, const Int<PRECISION> & p, const Int<PRECISION> & q, const Int<PRECISION> & u);

@@ -100,8 +100,9 @@ class EditClass : public ControlClass
 		int IsReadOnly;
 };
 
-inline EditClass::EditStyle operator |(EditClass::EditStyle, EditClass::EditStyle);
-inline EditClass::EditStyle operator &(EditClass::EditStyle, EditClass::EditStyle);
-inline EditClass::EditStyle operator ~(EditClass::EditStyle);
+// Explicit instantiation fix, same as ThreatType/ShapeFlags_Type (Agent/plans_done/code_1c_port_log.md).
+template EditClass::EditStyle operator |(EditClass::EditStyle, EditClass::EditStyle);
+template EditClass::EditStyle operator &(EditClass::EditStyle, EditClass::EditStyle);
+template EditClass::EditStyle operator ~(EditClass::EditStyle);
 
 #endif

@@ -523,7 +523,10 @@ GraphicViewPortClass *Set_Logic_Page(GraphicViewPortClass &ptr)
  *   10/09/1995     : Code stolen from Steve Tall                          *
  *=========================================================================*/
 extern	void Colour_Debug (int call_number);
-extern BOOL GameInFocus;
+// CODE/GLOBALS.CPP defines this as `bool` (see EXTERNS.H) - `bool` and `BOOL`(=int) are distinct
+// mangled C++ types, so declaring it BOOL here silently created a different, never-defined symbol
+// rather than referring to the real one (sub-milestone 1c - Agent/plans_done/code_1c_port_log.md).
+extern bool GameInFocus;
 
 extern void Block_Mouse(GraphicBufferClass *buffer);
 extern void Unblock_Mouse(GraphicBufferClass *buffer);

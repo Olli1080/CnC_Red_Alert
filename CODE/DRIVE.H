@@ -203,9 +203,11 @@ class DriveClass : public FootClass
 		static TrackType const Track1[24];
 };
 
-inline DriveClass::TrackControlType operator |(DriveClass::TrackControlType, DriveClass::TrackControlType);
-inline DriveClass::TrackControlType operator &(DriveClass::TrackControlType, DriveClass::TrackControlType);
-inline DriveClass::TrackControlType operator ~(DriveClass::TrackControlType);
+// Explicit instantiation of JSHELL.H's operator templates for this type (same fix as
+// ThreatType/ShapeFlags_Type - see JSHELL.H's comment, Agent/plans_done/code_1c_port_log.md).
+template DriveClass::TrackControlType operator |(DriveClass::TrackControlType, DriveClass::TrackControlType);
+template DriveClass::TrackControlType operator &(DriveClass::TrackControlType, DriveClass::TrackControlType);
+template DriveClass::TrackControlType operator ~(DriveClass::TrackControlType);
 
 
 #endif

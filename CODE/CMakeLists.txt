@@ -7,11 +7,16 @@
 # shipped build - this sidesteps CODE/'s .BAK files, IDE-only helper files, and other cruft without
 # having to rediscover "what's live" by trial and error the way WIN32LIB's glob+exclude did.
 #
-# .ASM files referenced by that object list (2KEYFBUF, 2TXTPRNT, CPUID, IPXPROT, LCWCOMP, WINASM)
-# are deliberately NOT included here - same policy as WIN32LIB/CMakeLists.txt: UASM wiring is
-# deferred to Phase 2, so this target only proves the C++ side compiles. Any symbols those .ASM
-# files provide will surface as unresolved externals only once something links a full executable
-# against this library, not before.
+# .ASM files referenced by that object list (2TXTPRNT, IPXPROT) are deliberately NOT included here -
+# same policy as WIN32LIB/CMakeLists.txt: UASM wiring is deferred to Phase 2 and 32-bit-flat assembly
+# can't assemble for this project's x64-only target anyway, so this target only proves the C++ side
+# compiles. Any symbols those .ASM files provide will surface as unresolved externals only once
+# something links a full executable against this library, not before. CPUID.ASM, LCWCOMP.ASM, and
+# 2KEYFBUF.ASM are exceptions: sub-milestone 1c rewrote them as CPUID.CPP/LCWCOMP.CPP/2KEYFBUF.CPP
+# (see each file's own header comment) rather than leaving them excluded, since redalert.exe needs
+# real implementations of Detect_MMX_Availability/CPUType, LCW_Comp, and Buffer_Frame_To_Page to link.
+# WINASM.ASM's still-live symbols (Stop_Execution, Set_Palette_Register, ModeX_Blit, the
+# Asm_Interpolate* family) are similarly covered by WINASM.CPP.
 #
 # One object name from the makefile has no corresponding source file anywhere in this GPL
 # release (checked the whole repo, not just CODE/):
@@ -27,6 +32,7 @@
 # written from every call site's actual usage (see PALETTE.H's own header comment for detail), not
 # recovered original source.
 set(CODE_SOURCES
+    2KEYFBUF.CPP
     2KEYFRAM.CPP
     AADATA.CPP
     ABSTRACT.CPP
@@ -70,6 +76,7 @@ set(CODE_SOURCES
     CONST.CPP
     CONTROL.CPP
     COORD.CPP
+    CPUID.CPP
     CRATE.CPP
     CRC.CPP
     CRCPIPE.CPP
@@ -135,6 +142,8 @@ set(CODE_SOURCES
     KEY.CPP
     LAYER.CPP
     LCW.CPP
+    LCWCOMP.CPP
+    LCWUNCMP.CPP
     LCWPIPE.CPP
     LCWSTRAW.CPP
     LINK.CPP
@@ -180,6 +189,7 @@ set(CODE_SOURCES
     # this .cpp's Win32 code path was never fully ported off it. GCL is proprietary and genuinely
     # absent from this GPL release (see FUNCTION.H's modem.h/fast.h note) - not worth reconstructing
     # for a feature (null-modem/dial-up multiplayer) that's dead regardless.
+    NULLSTUB.CPP
     OBJECT.CPP
     ODATA.CPP
     OPTIONS.CPP
@@ -258,9 +268,11 @@ set(CODE_SOURCES
     VESSEL.CPP
     VISUDLG.CPP
     VORTEX.CPP
+    VQASTUB.CPP
     W95TRACE.CPP
     WARHEAD.CPP
     WEAPON.CPP
+    WINASM.CPP
     WINSTUB.CPP
     WOLAPIOB.CPP
     WOLEDIT.CPP
@@ -315,3 +327,30 @@ target_compile_definitions(redalert_code PRIVATE
 )
 
 target_link_libraries(redalert_code PUBLIC win32lib)
+
+# Sub-milestone 1c (Agent/plans_wip/modernization_cmake_vcpkg.md): the actual executable. WinMain
+# lives in STARTUP.CPP, already part of redalert_code, so this target is just redalert_code plus
+# the system import libraries the original MAKEFILE would have linked implicitly - none of these
+# are declared via #pragma comment(lib, ...) anywhere in this codebase, so they must be listed
+# explicitly here (grepped for DirectDraw/DirectSound/winmm/Winsock/registry/window API usage):
+#   ddraw   - WIN32LIB/MISC/DDRAW.CPP (IDirectDraw/IDirectDraw2)
+#   dsound  - WIN32LIB/AUDIO/SOUNDIO.CPP etc. (IDirectSound) - kept as-is for 1c, see port log
+#   winmm   - timeSetEvent/timeBeginPeriod (audio maintenance timer), mciSendCommand (MCI.CPP)
+#   ws2_32  - TCPIP.CPP/WSPROTO.CPP/WSPUDP.CPP/WSPIPX.CPP (Winsock, the live multiplayer transport)
+#   user32/gdi32/advapi32/shell32 - CreateWindow/MessageBox, GDI, registry (RegOpenKeyEx et al.),
+#     shell32 (SHGetFolderPath-style calls) - not auto-linked since <windows.h> isn't pulled in via
+#     the usual #pragma comment(lib,...) idiom anywhere in this tree.
+# CC_ICON.RC is NOT included: it references "redalert.ico", which does not exist anywhere in this
+# GPL release (checked the whole repo) - cosmetic only, not worth blocking the link over.
+add_executable(redalert WIN32 EXE_STUB.CPP)
+target_link_libraries(redalert PRIVATE
+    redalert_code
+    ddraw
+    dsound
+    winmm
+    ws2_32
+    user32
+    gdi32
+    advapi32
+    shell32
+)
