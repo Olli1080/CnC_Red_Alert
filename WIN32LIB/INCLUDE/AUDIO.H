@@ -45,7 +45,10 @@
 // PWG 3-14-95: This structure used to have bit fields defined for Stereo
 //   and Bits.  These were removed because watcom packs them into a 32 bit
 //   flag entry even though they could have fit in a 8 bit entry.
-#pragma pack(1);
+// Scoped with push/pop: this used to be a bare `#pragma pack(1);` that was never restored, leaking
+// pack(1) into everything a translation unit included after this header (see
+// Agent/knowledge_base/pragma_pack_leak_odr.md).
+#pragma pack(push, 1)
 typedef struct {
 	unsigned short int	Rate;				// Playback rate (hertz).
 	long	Size;				// Size of data (bytes).
@@ -55,6 +58,7 @@ typedef struct {
 								//  2: Is the sample 16 bits?
 	unsigned char Compression;	// What kind of compression for this sample?
 } AUDHeaderType;
+#pragma pack(pop)
 
 
 /*=========================================================================*/
