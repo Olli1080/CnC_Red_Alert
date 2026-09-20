@@ -748,19 +748,23 @@ void Set_DD_Palette ( void *palette )
 	int	k;
 	char	*palette_get;
 
+	// Fill PaletteEntries[] UNCONDITIONALLY. It used to happen only inside the DirectDraw branch
+	// below, but PaletteSurface is only assigned when a real DirectDraw surface is created - which
+	// modern DirectDraw refuses (DDERR_INVALIDPIXELFORMAT, see PRESENT_D3D.CPP), so it is always NULL
+	// now and the D3D11 palette texture (Update_Palette_Texture, below) was being fed an all-zero
+	// palette: every frame would have rendered black. (Latent bug in the first version of the
+	// presenter, found by review while writing the handoff docs - Agent/HANDOFF.md.)
+	k=0;
+	palette_get = (char*)palette;
+	for( j=0 ; j<768 ; j+=3 )
+	{
+		PaletteEntries[k].peRed = (unsigned char)((*palette_get++)<<2);
+		PaletteEntries[k].peGreen = (unsigned char)((*palette_get++)<<2);
+		PaletteEntries[k].peBlue = (unsigned char)((*palette_get++)<<2);
+		k++;
+	}
+
 	if ( DirectDrawObject && PaletteSurface ){
-
-		k=0;
-
-		palette_get = (char*)palette;
-
-		for( j=0 ; j<768 ; j+=3 )
-		{
-			PaletteEntries[k].peRed = (unsigned char)((*palette_get++)<<2);
-			PaletteEntries[k].peGreen = (unsigned char)((*palette_get++)<<2);
-			PaletteEntries[k].peBlue = (unsigned char)((*palette_get++)<<2);
-			k++;
-		}
 
 		if ( !FirstPaletteSet ){
 			//MessageBox(MainWindow, "In Set_DD_Palette. About to call SetPalette","Note", MB_ICONEXCLAMATION|MB_OK);
@@ -803,6 +807,11 @@ void Set_DD_Palette ( void *palette )
 void Wait_Blit (void)
 {
 	HRESULT	return_code;
+
+	// No real DirectDraw surface exists anymore (PaletteSurface is NULL - see Set_DD_Palette's
+	// comment), so there is no hardware blitter to wait on. Was a NULL dereference (reachable via
+	// CODE/INTERPAL.CPP's Interpolate_2X_Scale).
+	if (!PaletteSurface) return;
 
 	do {
 		return_code=PaletteSurface->GetBltStatus (DDGBS_ISBLTDONE);
