@@ -7,6 +7,8 @@ metadata:
 
 # Build Toolchains
 
+> **This file documents the ORIGINAL (1996) build systems.** The live build is now CMake + vcpkg on MSVC 2026 x64 (`CMakeLists.txt`, `CMakePresets.json`, `CODE/CMakeLists.txt`, `WIN32LIB/CMakeLists.txt`) - start at [../HANDOFF.md](../HANDOFF.md). The original makefiles remain useful as the record of the original compiler *flags* (notably `/zp1` byte-packing in `CODE/MAKEFILE:113`, see [pragma_pack_leak_odr.md](pragma_pack_leak_odr.md)) and of the authoritative source/object lists.
+
 This repo accreted over several years (mid-90s) across multiple engineers and machines, so **several build systems coexist per module** and are not equally live. See [../agent_policies/toolchain_and_editing_constraints.md](../agent_policies/toolchain_and_editing_constraints.md) for the "don't assume any given build file works" caveat; this file records the verified specifics.
 
 ## Per-module toolchain summary

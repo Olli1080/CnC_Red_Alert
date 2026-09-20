@@ -1,16 +1,22 @@
 ---
 name: toolchain-and-editing-constraints
-description: The codebase does not build out of the box; required legacy toolchains, missing dependencies, and how to handle backup/binary files safely
+description: The original Watcom/TASM toolchain is unobtainable but a modern CMake/MSVC x64 build works; legacy dependencies, and how to handle backup/binary/duplicate files safely
 metadata:
   type: agent_policy
 ---
 
 # Toolchain & Editing Constraints
 
-## The code does not currently build
-Per the root [README.md](../../README.md): *"The current state of the source code does not fully compile and will require some effort to restore it."* Do not assume a `cmake`/modern-toolchain build is available or attempt to invent one implicitly — restoring buildability is itself a project the user would need to explicitly ask for. See [../knowledge_base/build_toolchains.md](../knowledge_base/build_toolchains.md) for the full, verified toolchain landscape (Watcom is primary; Borland/Turbo C++, Codewright, and MSVC6 artifacts coexist per-module and are **not** all equally authoritative).
+## Build status (updated 2026-09-20)
+Per the root [README.md](../../README.md), the *original* source "does not fully compile" with its original tools, and those tools (Watcom 10.6, TASM 4.0, DirectX 5 SDK, GCL, HMI SOS) are largely unobtainable. **That is no longer the practical situation:** the owner's modernization effort (CMake + vcpkg submodule, MSVC 2026, **x64 only**) builds `win32lib.lib`, `redalert_code.lib` and a linking `redalert.exe` with 0 errors and 0 unresolved externals - see [../HANDOFF.md](../HANDOFF.md) for the exact state and [../plans_wip/modernization_cmake_vcpkg.md](../plans_wip/modernization_cmake_vcpkg.md) for the plan. Build with `cmake --preset Main` then `cmake --build build/Main --target redalert --config Debug -- -m` (or `scripts/runtest.ps1 build`).
 
-## Required toolchains to actually compile (per README)
+Consequences for agents:
+- **"Does it compile" IS now a usable signal - but a weak one.** It says nothing about runtime correctness (most of the ~66 `.ASM` files rewritten as C++ had never executed when this was written). Verify by running: [../knowledge_base/debugging_and_runtime_testing.md](../knowledge_base/debugging_and_runtime_testing.md).
+- The legacy per-module makefiles (`MAKEFILE`, `.BOR`, `.WAT`, `.IDE`, `.DSP`) are still **reference material only**; the CMake files are the live build. They are, however, the authoritative record of the *original* compiler flags - e.g. `CODE/MAKEFILE:113` `/zp1` (byte-packed structs), which turned out to matter enormously ([../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md)).
+- Source lists: `CODE/CMakeLists.txt` is an explicit list transcribed from Westwood's own `MAKEFILE`; `WIN32LIB/CMakeLists.txt` globs the live module directories and excludes `SRCDEBUG/`, `OLD*/`, `TEST/`, `MSVC/`, `UTIL/`.
+- Running the game requires the owner's own game data (Steam CnC Remastered Collection). Never add, download or commit game assets.
+
+## Original toolchain requirements (per README - historical; not needed for the CMake build)
 - Watcom C/C++ v10.6 (the primary/shipped compiler for `CODE/`, `WIN32LIB/`, `WWFLAT32/`, `VQ/`, `WINVQ/`)
 - Borland Turbo Assembler (TASM v4.0) for `.ASM` files
 
@@ -28,5 +34,5 @@ To use compiled binaries at all, the README notes you must own the game (availab
 - **Whole superseded module-copy subdirectories exist** (e.g. `WIN32LIB/KEYBOARD/OLD/`, `WIN32LIB/MEM/OLDMEM/` and `MSVC/`, `WWFLAT32/AUDIO/NEW/`, `WINVQ/VQA32/OLD/`, `IPX/OK/` and `IPX/OLD/`) — near-duplicates of their parent module's active files. Don't edit these when the intent is to change current behavior; confirm which copy is "live" first (usually the one directly in the module's top-level directory, not in a nested `OLD`/`NEW`/`OK`/alternate-compiler subfolder — but `IPX/OK/` is the inverse case, a verified-good *reference* snapshot, not dead code — see [../project_state/modules/ipx_launch_launcher_tools.md](../project_state/modules/ipx_launch_launcher_tools.md)).
 - **Binary files masquerading among text source**: `.IDE` (Borland/Watcom IDE project files), `.OBJ`/`.EXE`/`.LIB` (prebuilt binaries, e.g. `TOOLS/*.EXE`, `WINVQ/VQAVIEW/VQAVIEW.EXE`, `WINVQ/LIB/*.LIB`) are not text — don't try to read or diff them as such.
 - **Multiple coexisting build systems per module, not equally live**: e.g. in `CODE/`, the extensionless `MAKEFILE` (Watcom) + `MAKE_ALL.BAT` is the current path; `TURBOC.CFG`/`TLINK.CFG`/`.PJT`/`.IDE` files are legacy/historical artifacts from earlier in the project's life. In `WIN32LIB/`/`WWFLAT32/`, the plain `MAKEFILE` = Watcom (primary), `MAKEFILE.BOR` = Borland (secondary), `MAKEFILE.WAT` = explicit alternate Watcom variant. `LAUNCHER/` is the one module that's genuinely MSVC6-native (`LAUNCHER.DSP`/`.DSW`), not Watcom. Don't assume changing one build file updates all of them — they're often stale copies of each other.
-- **No compiler available to verify changes**: since nothing currently builds, "does it compile" isn't a usable correctness signal for now. Verify changes by reading/tracing the code (and cross-referencing [../project_state/](../project_state/summary.md) for how a subsystem is supposed to work) rather than assuming a build step will catch mistakes, unless the user has a working Watcom/TASM environment set up and asks you to use it.
+- **Compile *and run* your changes** (see Build status above). Cross-reference [../project_state/](../project_state/summary.md) for how a subsystem is supposed to work; for the legacy ASM that was rewritten in C++, the original `.ASM` is still next to the rewrite and is the spec.
 - **Hardcoded developer-machine paths** appear throughout build/config files (e.g. `D:\BC45\INCLUDE`, `F:\projects\c&c0\vcs\code`, `C:\rawolapi\SOURCE\WATCOM`) — these are historical artifacts of Westwood's original build machines, not something to "fix"; they indicate which build files are legacy vs. still relevant to the environment variables the current `MAKEFILE`s expect (`WATCOM`, `WWFLAT`, `WWVCS`, `WIN32LIB`, `BLADE`).

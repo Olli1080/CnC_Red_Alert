@@ -2,11 +2,14 @@
 
 This folder is the persistent knowledge base for AI agents working in this repository (EA's open-source release of Command & Conquer: Red Alert, 1996 Westwood Studios). See the root [AGENTS.md](../AGENTS.md) for the one-paragraph orientation.
 
+## Start here when resuming the port
+- **[HANDOFF.md](HANDOFF.md)** — takeover document: current state, the exact next blocker, uncommitted fixes to land, the build/run/debug workflow, rules and pitfalls. Then [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md).
+
 ## Subfolders
 
 - **[agent_policies/](agent_policies/summary.md)** — Rules to respect: licensing/attribution constraints, contribution scope (this is a personal fork; upstream takes no PRs), and toolchain/editing caveats for this legacy codebase.
 - **[project_state/](project_state/summary.md)** — The structural map of the codebase itself: what every top-level module (`CODE/`, `WIN32LIB/`, `WWFLAT32/`, `VQ/`+`WINVQ/`, `IPX/`+`LAUNCH/`+`LAUNCHER/`+`TOOLS/`) does, organized down to key-file-level descriptions.
-- **[knowledge_base/](knowledge_base/summary.md)** — Emerging, cross-cutting knowledge: the build/toolchain landscape, missing third-party dependencies, the repo's proprietary file formats, and its accumulated history/cruft (backup files, superseded module copies, multi-generation subsystems).
+- **[knowledge_base/](knowledge_base/summary.md)** — Emerging, cross-cutting knowledge: the build/toolchain landscape, missing third-party dependencies, the repo's proprietary file formats, its accumulated history/cruft (backup files, superseded module copies, multi-generation subsystems), and the modernization/porting knowledge (debugging & runtime-testing runbook, x64 pitfalls checklist, the `/zp1` struct-packing saga).
 - **[Analysis/](Analysis/summary.md)** — Candidate and in-progress deep-dive investigation tasks for future sessions (e.g. tracing the full game loop, mapping the save-game format, documenting `.MIX`/`.INI` schemas in full).
 - **[plans_wip/](plans_wip/summary.md)** — Work plans currently in progress.
 - **[plans_done/](plans_done/summary.md)** — Completed work plans, kept for reference.
