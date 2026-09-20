@@ -2,7 +2,9 @@
 
 This repository is Electronic Arts' 2025 open-source release of the **Command & Conquer: Red Alert** (1996, Westwood Studios) source code — a ~2,900-file, mid-1990s Watcom C++ / Borland TASM codebase spanning a DOS engine generation and its Win32 port. The original Watcom/Borland toolchain is unobtainable (see [Agent/knowledge_base/build_toolchains.md](Agent/knowledge_base/build_toolchains.md)), but **a modernized CMake + vcpkg build (MSVC 2026, x64) now produces a linking `redalert.exe`** that boots against the owner's own game data as far as `Init_Mouse` (nothing renders yet).
 
-**Continuing the modernization work? Start with [Agent/HANDOFF.md](Agent/HANDOFF.md)** — current state, the exact next blocker, uncommitted fixes to land, the one-command build/run/debug workflow (`scripts/runtest.ps1`), and rules to keep.
+**Continuing the modernization work? Start with [Agent/HANDOFF.md](Agent/HANDOFF.md)** — current state, the exact next blocker, the build/run/debug workflow (`scripts/runtest.ps1`), and rules to keep.
+
+
 
 **Before doing any other non-trivial work here, read [Agent/summary.md](Agent/summary.md).** It indexes everything this project's agents have already learned:
 

@@ -25,12 +25,8 @@ Parent plan: [modernization_cmake_vcpkg.md](modernization_cmake_vcpkg.md) (Phase
 Write each *class* of bug down in `knowledge_base/x64_porting_pitfalls.md` as you find it (the next crash is very likely the same class as the last).
 
 ## Ordered steps
-### Step 0 - land the verified working-tree fixes (do this first)
-The working tree contains **uncommitted, verified** changes; inspect with `git status` / `git diff`, then commit (suggested split: one commit per bullet):
-- `WIN32LIB/{INCLUDE,AUDIO}/{AUDIO,SOUNDINT}.H` - scope `#pragma pack` with push/pop (fixes the `IndexClass` crash; see [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md)).
-- `CODE/MIXFILE.H` - `#pragma pack(push,1)` + `static_assert(sizeof==6)` on `FileHeader` (fixes `Bootstrap`'s NULL `Retrieve`).
-- `WIN32LIB/MISC/DDRAW.CPP` - `Set_DD_Palette` now fills `PaletteEntries[]` unconditionally (previously gated on `PaletteSurface`, which is always NULL now => the D3D11 palette texture would have stayed zero => permanently black screen) and `Wait_Blit` returns early when `PaletteSurface` is NULL (was a NULL deref via `CODE/INTERPAL.CPP:358`). *Reasoned and builds; not yet exercised at runtime* (needs the first palette set / first blit).
-- `scripts/runtest.ps1` + the `Agent/` docs.
+### Step 0 - already done (for reference)
+The fixes that got the boot from `Init_Keys` to `Init_Mouse` are committed: `e75d5bf` (pragma pack scoping - [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md)), `d1db96f` (MIX `FileHeader` packing), `eacb07d` (`Set_DD_Palette` now fills `PaletteEntries[]` unconditionally - previously gated on `PaletteSurface`, always NULL now, which would have left the D3D11 palette texture zero => permanently black screen - plus a `Wait_Blit` NULL guard; *reasoned and builds, not yet exercised at runtime*), `ef0fee9` (script + docs).
 
 ### Step 1 - current blocker: `Init_Mouse` -> `Get_Shape_Uncomp_Size` (predicted: `.SHP` header packing)
 Full evidence and the predicted fix in [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md) "Instance 3". Pack `Shape_Type` and `ShapeBlock_Type` in `WIN32LIB/INCLUDE/SHAPE.H` (and the `WIN32LIB/SHAPE/` copy if present) with `static_assert`s, rebuild, rerun. **Then run the audit in that document (steps 1-2) proactively for all other on-disk structs** rather than waiting for each to crash: `IControl_Type` (icon sets), font headers, `.WSA`, `2KEYFRAM` key-frame headers, palette/CPS loaders.

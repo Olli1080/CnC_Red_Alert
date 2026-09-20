@@ -26,14 +26,14 @@ but the reader was `cmp qword ptr [rax+18h],0` (natural layout, `Archive` at +0x
 
 Cause: `WIN32LIB/INCLUDE/AUDIO.H:48` `#pragma pack(1);` **never restored**; `SOUNDINT.H:75` `pack(1);` and `:273` bare `pack(4);`. `CODE/FUNCTION.H:193` -> `<wwlib32.h>` -> `<audio.h>`, so everything included *after* that in a TU was packed, and whether `search.h`/`ini.h` came before or after depended on each `.CPP`'s include order.
 
-Fix (verified: crash gone, boot advanced): scope with `push, 1` / `pop` in **both copies** (`WIN32LIB/INCLUDE/` and `WIN32LIB/AUDIO/`) of `AUDIO.H` and `SOUNDINT.H` (`SOUNDINT.H`'s trailing `pack(4)` becomes `pack(pop)`). Working-tree change; see [../HANDOFF.md](../HANDOFF.md) for commit state.
+Fix (verified: crash gone, boot advanced): scope with `push, 1` / `pop` in **both copies** (`WIN32LIB/INCLUDE/` and `WIN32LIB/AUDIO/`) of `AUDIO.H` and `SOUNDINT.H` (`SOUNDINT.H`'s trailing `pack(4)` becomes `pack(pop)`). Committed as `e75d5bf`.
 
 Caveat worth knowing: that leak had been *accidentally* byte-packing (part of) many CODE TUs - i.e. accidentally imitating `/zp1`. Removing it is correct, but it means structs that "worked by accident" in some TUs can now break - which is exactly what Instance 2 turned out to be.
 
 ## Instance 2 (VERIFIED): `MixFileClass::FileHeader` - MIX archives parsed as garbage
 `CODE/MIXFILE.H`: `struct { short count; long size; }` is the on-disk header (2+4 = **6 bytes**). Compiled unpacked it is **8** (`dt` showed `size` at `+0x004`). The constructor (`MIXFILE.CPP:226-230`) read `sizeof(fileheader)` bytes, so `DataSize` and the `SubBlock` table were misaligned; `Retrieve("TEMPERAT.PAL")` returned NULL and `Bootstrap` crashed in `memmove`. Observable symptom before the fix (via a `CreateFileA` logging breakpoint): `REDALERT.MIX` opened, but `LOCAL.MIX`/`HIRES.MIX`/`NCHIRES.MIX` (which live *inside* it) were then requested **from disk** - i.e. the in-archive lookup failed.
 
-Fix (verified: `Bootstrap` passes, `TEMPERAT.PAL` found, boot advances to `Init_Mouse`): `#pragma pack(push,1)` around the struct + `static_assert(sizeof(FileHeader) == 6)`. Working-tree change in `CODE/MIXFILE.H`.
+Fix (verified: `Bootstrap` passes, `TEMPERAT.PAL` found, boot advances to `Init_Mouse`): `#pragma pack(push,1)` around the struct + `static_assert(sizeof(FileHeader) == 6)`. Committed as `d1db96f` (`CODE/MIXFILE.H`).
 (`SubBlock` is three `long`s = 12 bytes either way; the `alternate` struct is two `short`s = 4 bytes either way.)
 
 ## Instance 3 (PREDICTED, not yet fixed): `.SHP` headers -> crash in `Init_Mouse`

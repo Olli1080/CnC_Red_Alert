@@ -10,8 +10,8 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 |---|---|
 | `win32lib` (1a), `redalert_code` (1b), `redalert.exe` links (1c) | done, committed |
 | DirectDraw 8-bit wall | **worked around** by a Direct3D 11 presenter (`WIN32LIB/MISC/PRESENT_D3D.CPP`), committed `86f6b00`. Modern DirectDraw refuses *any* 8-bit surface (`DDERR_INVALIDPIXELFORMAT`), so `VisiblePage` falls back to plain system memory and D3D11 uploads it as an `R8_UINT` texture + a 256x1 palette texture; a 2-line pixel shader expands it |
-| `Init_Keys` (INI + RSA key) | **fixed, uncommitted**: leaked `#pragma pack` ([knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md)) |
-| `Bootstrap` (MIX parsing, `TEMPERAT.PAL`) | **fixed, uncommitted**: on-disk `MixFileClass::FileHeader` was 8 bytes instead of 6 (same document) |
+| `Init_Keys` (INI + RSA key) | **fixed, committed `e75d5bf`**: leaked `#pragma pack` ([knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md)) |
+| `Bootstrap` (MIX parsing, `TEMPERAT.PAL`) | **fixed, committed `d1db96f`**: on-disk `MixFileClass::FileHeader` was 8 bytes instead of 6 (same document) |
 | **`Init_Mouse`** | **CURRENT BLOCKER**: `Get_Shape_Uncomp_Size` faults reading a `.SHP` header. Predicted cause: `Shape_Type`/`ShapeBlock_Type` in `WIN32LIB/INCLUDE/SHAPE.H` need byte packing (same bug class). Not yet fixed |
 | Everything after (fonts, palette, menus, map, audio) | never executed |
 | Presenter *draw path* (`Present_VisiblePage`, `Update_Palette_Texture`) | written and reviewed, **never run** |
@@ -20,22 +20,21 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 
 ## 3. First 30 minutes
 ```powershell
-git status                                   # expect the uncommitted verified fixes listed in section 4
+git status                                   # expect a clean tree (everything below is committed)
 .\scripts\runtest.ps1 build                  # Debug build of the redalert target (first time also runs cmake --preset Main)
 .\scripts\runtest.ps1 setup                  # build\runtest\ : hard-linked MIX files + PRIVATE REDALERT.INI copy
 .\scripts\runtest.ps1 debug                  # runs under cdb -> exception record + symbolized stack (expect Get_Shape_Uncomp_Size)
 ```
-Prereqs and cdb recipes (write-watchpoints, template-symbol quirks, the `-g` trap): [knowledge_base/debugging_and_runtime_testing.md](knowledge_base/debugging_and_runtime_testing.md). Then open [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) and start at Step 0/Step 1.
+Prereqs and cdb recipes (write-watchpoints, template-symbol quirks, the `-g` trap): [knowledge_base/debugging_and_runtime_testing.md](knowledge_base/debugging_and_runtime_testing.md). Then open [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) and start at Step 1.
 
-## 4. Uncommitted working-tree changes (all built and runtime-verified unless noted) - commit them first
-| Files | What / why |
+## 4. Fixes made in the most recent session (all committed; verify with `git log -6`)
+| Commit | What / why |
 |---|---|
-| `WIN32LIB/INCLUDE/{AUDIO,SOUNDINT}.H`, `WIN32LIB/AUDIO/{AUDIO,SOUNDINT}.H` | `#pragma pack` scoped with push/pop (both copies; they are identical) |
-| `CODE/MIXFILE.H` | `FileHeader` packed to 6 bytes + `static_assert` |
-| `WIN32LIB/MISC/DDRAW.CPP` | `Set_DD_Palette` fills `PaletteEntries[]` unconditionally (was gated on a NULL `PaletteSurface` => black screen forever); `Wait_Blit` NULL guard. **Builds; runtime path not yet reached** |
-| `scripts/runtest.ps1` | build/setup/run/debug wrapper (tested) |
-| `Agent/**`, `AGENTS.md` | this documentation set |
-If the tree is clean when you arrive, someone committed them - check `git log`.
+| `e75d5bf` | `#pragma pack` scoped with push/pop in `AUDIO.H`/`SOUNDINT.H` (both copies) - fixes the `IndexClass` crash in `Init_Keys` |
+| `d1db96f` | `MixFileClass::FileHeader` packed to 6 bytes + `static_assert` - fixes `Bootstrap`'s NULL `Retrieve` |
+| `eacb07d` | `Set_DD_Palette` fills `PaletteEntries[]` unconditionally (was gated on a NULL `PaletteSurface` => black screen forever); `Wait_Blit` NULL guard. **Builds; runtime path not yet reached** |
+| `ef0fee9` | `scripts/runtest.ps1` + this documentation set |
+The first two were verified by re-running (the crash moved). The third is reasoned and builds but its code path has not executed yet.
 
 ## 5. Commit history you'll want
 `61244a5` sub-milestone 1c (links) - `86f6b00` D3D11 presenter + `Offset`->`INT_PTR` + 16-site pixel-pointer fix. Older: `82abd41` 1b, `356b3b5`/`3fde7e6` 1a, `9cc6035` Phase 0. Full narratives: [plans_done/](plans_done/summary.md) (`code_1c_port_log.md` is the richest; it now has the whole D3D11 story).

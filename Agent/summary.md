@@ -3,7 +3,7 @@
 This folder is the persistent knowledge base for AI agents working in this repository (EA's open-source release of Command & Conquer: Red Alert, 1996 Westwood Studios). See the root [AGENTS.md](../AGENTS.md) for the one-paragraph orientation.
 
 ## Start here when resuming the port
-- **[HANDOFF.md](HANDOFF.md)** — takeover document: current state, the exact next blocker, uncommitted fixes to land, the build/run/debug workflow, rules and pitfalls. Then [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md).
+- **[HANDOFF.md](HANDOFF.md)** — takeover document: current state, the exact next blocker, the build/run/debug workflow, rules and pitfalls. Then [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md).
 
 ## Subfolders
 
