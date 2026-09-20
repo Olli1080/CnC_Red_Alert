@@ -95,10 +95,17 @@ class MixFileClass : public Node<MixFileClass<T> >
 		**	This is the initial file header. It tells how many files are embedded
 		**	within this mixfile and the total size of all embedded files.
 		*/
+		// This is the ON-DISK mixfile header: 2 + 4 = 6 bytes. The original Watcom build compiled all of
+		// CODE/ with /zp1 (CODE/MAKEFILE:113), which made this 6 bytes; MSVC's default packing pads it to
+		// 8 (size lands at +4 instead of +2), so every mixfile header parsed as garbage and no embedded file
+		// could be found. Pack it explicitly - see Agent/knowledge_base/pragma_pack_leak_odr.md.
+#pragma pack(push, 1)
 		typedef struct {
 			short	count;
 			long	size;
 		} FileHeader;
+#pragma pack(pop)
+		static_assert(sizeof(FileHeader) == 6, "on-disk mixfile header must be 6 bytes");
 
 		/*
 		**	The number of files within the mixfile.
