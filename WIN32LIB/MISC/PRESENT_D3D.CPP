@@ -40,6 +40,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <string.h>
+#include <mmsystem.h>		// timeBeginPeriod (Pace_To_Display); winmm is linked into redalert already
 
 static ID3D11Device				* D3DDevice				= NULL;
 static ID3D11DeviceContext		* D3DContext			= NULL;
@@ -249,6 +250,43 @@ void Present_VisiblePage(void)
 	// VisiblePage, dozens of times a frame - each call is a trivial texture upload plus a 3-vertex
 	// draw, and staying non-blocking is what avoids needing dirty-rect tracking or throttling.
 	D3DSwapChain->Present(0, 0);
+}
+
+// Frame pacing for the game's inner input/render loop (CONQUER.CPP Sync_Delay).
+//
+// That loop polls the mouse and re-renders for as long as the logic frame timer runs, and several
+// things in it act once per iteration with no time base of their own (e.g. ScrollClass::AI moves the
+// map by a fixed distance on every call while the pointer sits at the screen edge). In the original
+// the blit to the real screen and the video hardware limited it to roughly the refresh rate; here
+// the presenter never blocks, so it spun thousands of times a second and the map scrolled
+// absurdly fast (and one core was pegged). Pace it to ~60 iterations per second instead.
+// Sleeps cooperatively, so the audio timer thread and the message pump are unaffected.
+void Pace_To_Display(void)
+{
+	static LARGE_INTEGER frequency;
+	static LARGE_INTEGER next_tick;
+	static bool initialised = false;
+
+	if (!initialised) {
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&next_tick);
+		timeBeginPeriod(1);		// make Sleep(1) really sleep ~1ms instead of ~15ms
+		initialised = true;
+	}
+
+	LONGLONG const interval = frequency.QuadPart / 60;
+	LARGE_INTEGER now;
+	QueryPerformanceCounter(&now);
+
+	while (now.QuadPart < next_tick.QuadPart) {
+		LONGLONG remaining_ms = ((next_tick.QuadPart - now.QuadPart) * 1000) / frequency.QuadPart;
+		if (remaining_ms > 1) Sleep((DWORD)(remaining_ms - 1)); else Sleep(0);
+		QueryPerformanceCounter(&now);
+	}
+
+	next_tick.QuadPart += interval;
+	// After a long stall (loading, a dialog) do not try to "catch up" with a burst of fast iterations.
+	if (next_tick.QuadPart < now.QuadPart) next_tick.QuadPart = now.QuadPart + interval;
 }
 
 // The game runs at PresentWidth x PresentHeight (640x400 in the shipped data) while MainWindow is a

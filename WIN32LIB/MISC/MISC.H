@@ -78,6 +78,7 @@ BOOL		Init_Present_Device(HWND hwnd, int width, int height);
 void		Update_Palette_Texture(PALETTEENTRY const * entries);
 void		Present_VisiblePage(void);
 void		Present_VisiblePage_Throttled(void);
+void		Pace_To_Display(void);		// sleeps so the caller's loop runs at ~60 Hz (see PRESENT_D3D.CPP)
 // Mouse positions in game (640x400) coordinates; see PRESENT_D3D.CPP for why they need rescaling.
 void		Client_To_Game_Coords(int * x, int * y);
 BOOL		Get_Game_Cursor_Pos(POINT * pt);

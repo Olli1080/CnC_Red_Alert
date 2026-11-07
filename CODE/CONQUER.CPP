@@ -2083,6 +2083,8 @@ FacingType KN_To_Facing(int input)
  *   01/04/1995 JLB : Created.                                                                 *
  *   03/06/1995 JLB : Fixed.                                                                   *
  *=============================================================================================*/
+void Pace_To_Display(void);		// WIN32LIB/MISC/PRESENT_D3D.CPP
+
 static void Sync_Delay(void)
 {
 	/*
@@ -2110,6 +2112,12 @@ static void Sync_Delay(void)
 			}
 			Map.Render();
 		}
+
+		/*
+		**	Port: pace this input/render loop to ~60 Hz. Things in it (map scrolling) act once per
+		**	iteration without any time base; the original was throttled by the screen blit.
+		*/
+		Pace_To_Display();
 	}
 	Color_Cycle();
 	Call_Back();
