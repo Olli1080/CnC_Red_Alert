@@ -88,7 +88,10 @@ bool Get_Broadcast_Addresses (void)
 	RemapControlType * scheme = GadgetClass::Get_Color_Scheme();
 
 	Fancy_Text_Print(TXT_NONE, 0, 0, NULL, TBLACK,TPF_6PT_GRAD | TPF_NOSHADOW);
-	Format_Window_String("IP Addresses", SeenBuff.Get_Height(), width, height);
+	// Port: Format_Window_String() rewrites its text in place (inserts line breaks), so it needs a
+	// writable buffer, not a string literal.
+	char title[] = "IP Addresses";
+	Format_Window_String(title, SeenBuff.Get_Height(), width, height);
 
 
 	GadgetClass *commands;										// button list

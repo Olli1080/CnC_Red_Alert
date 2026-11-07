@@ -260,7 +260,13 @@ int CDFileClass::Set_Search_Drives(char * pathlist)
 	*/
 	if (!pathlist) return(0);
 
-	char const * ptr = strtok(pathlist, ";");
+	// Port: strtok() writes NULs into its argument; callers may pass a string literal (read-only on
+	// MSVC), so tokenize a private copy.
+	char pathcopy[1024];
+	strncpy(pathcopy, pathlist, sizeof(pathcopy) - 1);
+	pathcopy[sizeof(pathcopy) - 1] = '\0';
+
+	char const * ptr = strtok(pathcopy, ";");
 	while (ptr) {
 		char path[PATH_MAX];						// Working path buffer.
 		SearchDriveType *srch;					// Working pointer to path object.
@@ -397,7 +403,12 @@ int CDFileClass::Set_Search_Drives(char * pathlist)
 		strcat (RawPath, pathlist);
 	}
 
-	char const * ptr = strtok(pathlist, ";");
+	// Port: tokenize a private copy (strtok writes into its argument; literals are read-only on MSVC).
+	char pathcopy[1024];
+	strncpy(pathcopy, pathlist, sizeof(pathcopy) - 1);
+	pathcopy[sizeof(pathcopy) - 1] = '\0';
+
+	char const * ptr = strtok(pathcopy, ";");
 	while (ptr != NULL) {
 		if (strlen(ptr) > 0) {
 

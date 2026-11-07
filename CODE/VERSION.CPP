@@ -196,7 +196,7 @@ unsigned long VersionClass::Version_Number(void)
 unsigned short VersionClass::Major_Version(void)
 {
 #ifdef DEV_VERSION
-	static char * date = __DATE__;		// format: Mmm dd yyyy
+	static char date[] = __DATE__;		// format: Mmm dd yyyy
 	static char const * months = "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC";
 	char buf[10];
 	char * ptr;
@@ -294,7 +294,7 @@ unsigned short VersionClass::Major_Version(void)
 unsigned short VersionClass::Minor_Version(void)
 {
 #ifdef DEV_VERSION
-	static char * time = __TIME__;		// format: hh:mm:ss
+	static char time[] = __TIME__;		// format: hh:mm:ss
 	char * tok;
 	char buf[10];
 	int hournum;
@@ -738,7 +738,7 @@ char const * Version_Name(void)
 	**	Fetch the day and month components from the current
 	**	build date.
 	*/
-	static char * date = __DATE__;		// format: Mmm dd yyyy
+	static char date[] = __DATE__;		// format: Mmm dd yyyy
 	strupr(date);
 	char const * tok = strtok(date, " ");
 	static char const * months = "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC";
@@ -757,7 +757,7 @@ char const * Version_Name(void)
 	/*
 	**	Fetch the time components from the current build time.
 	*/
-	static char * time = __TIME__;		// format: hh:mm:ss
+	static char time[] = __TIME__;		// format: hh:mm:ss
 	tok = strtok(time, ": ");
 	int hournum = 0;
 	if (tok != NULL) {

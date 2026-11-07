@@ -1376,7 +1376,7 @@ void ScoreClass::Print_Minutes(int minutes)
  * HISTORY:                                                                                    *
  *   04/07/1995 BWG : Created.                                                                 *
  *=============================================================================================*/
-void ScoreClass::Count_Up_Print(char *str, int percent, int maxval, int xpos, int ypos)
+void ScoreClass::Count_Up_Print(char const *str, int percent, int maxval, int xpos, int ypos)
 {
 	char destbuf[64];
 
