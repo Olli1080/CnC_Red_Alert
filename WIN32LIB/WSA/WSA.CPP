@@ -120,12 +120,24 @@ typedef struct {
 // IT TO THE FILE.  THIS MEANS I HAVE TO ADD THESE charS ON NOW FOR IT TO WORK.
 #define EXTRA_charS_ANIMATE_NOT_KNOW_ABOUT	(sizeof(short) + sizeof(unsigned long))
 
+// Port: the stored largest_frame_size is (real largest frame + sizeof(SysAnimHeaderType) of the 32-bit
+// build - EXTRA...), so Open_Animation subtracts sizeof(SysAnimHeaderType) again. With 64-bit pointers
+// the struct is bigger, which made that subtraction too large (delta buffer too small, the frame copy
+// started before the buffer and file_buffer ended up wild). Use the original size (Watcom's default
+// /zp2 packing, WIN32LIB/PROJECT.CFG: 7 shorts + 2 pointers + name[13] + 2 shorts + ulong = 44) for
+// that arithmetic and add the growth of the in-memory header to the allocation instead.
+#define WSA_ORIGINAL_HEADER_SIZE	44
+#define WSA_HEADER_GROWTH		((long)sizeof(SysAnimHeaderType) - WSA_ORIGINAL_HEADER_SIZE)
+
 
 //
 // Header structure for the file.
 // NOTE:  The 'total_frames' field is used to differentiate between Amiga and IBM
 // animations.  Amiga animations have the HIGH bit set.
 //
+// Port: this is the on-disk file header (22 bytes). Watcom's default packing made it 22; MSVC's 8-byte
+// packing made it 24 and shifted every field after the shorts and WSA_FILE_HEADER_SIZE.
+#pragma pack(push, 1)
 typedef struct {
 	unsigned short total_frames;
 	unsigned short pixel_x;
@@ -138,6 +150,8 @@ typedef struct {
 	unsigned long frame0_end;
 	/* unsigned long data_seek_offset, unsigned short frame_size ... */
 } WSA_FileHeaderType;
+#pragma pack(pop)
+static_assert(sizeof(WSA_FileHeaderType) == 22, "WSA file header must be 22 bytes");
 
 #define WSA_FILE_HEADER_SIZE	( sizeof(WSA_FileHeaderType) - (2 * sizeof(unsigned long)) )
 
@@ -255,7 +269,7 @@ void * __cdecl Open_Animation(char const *file_name, char *user_buffer, long use
 	// UTILITY DID NOT KNOW I UPDATED IT, IT ADDS IT TO largest_frame_size BEFORE SAVING
 	// IT TO THE FILE.  THIS MEANS I HAVE TO ADD THESE charS ON NOW FOR IT TO WORK.
 	delta_buffer_size  = (unsigned long) file_header.largest_frame_size + EXTRA_charS_ANIMATE_NOT_KNOW_ABOUT;
-	min_buffer_size = target_buffer_size + delta_buffer_size;
+	min_buffer_size = target_buffer_size + delta_buffer_size + WSA_HEADER_GROWTH;
 	max_buffer_size = min_buffer_size + file_buffer_size;
 
 	// check to see if buffer size is big enough for at least min required
@@ -341,7 +355,7 @@ void * __cdecl Open_Animation(char const *file_name, char *user_buffer, long use
 	sys_header -> anim_mem_size = user_buffer_size;
 	sys_header -> delta_buffer  = delta_buffer;
 	sys_header -> largest_frame_size =
-                 (unsigned short) (delta_buffer_size - sizeof(SysAnimHeaderType));
+                 (unsigned short) (delta_buffer_size - WSA_ORIGINAL_HEADER_SIZE);
 
 	strcpy(sys_header->file_name, file_name);
 
