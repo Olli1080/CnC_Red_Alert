@@ -88,9 +88,14 @@ extern "C" unsigned int __cdecl Apply_XOR_Delta(char * target, char * delta)
 // the original's own multi-row skip loop) rather than a flat pointer add.
 namespace {
 
-void Apply_Delta_Rows(unsigned char * target, unsigned char const * delta, int width, int nextrow, bool do_copy)
+void Apply_Delta_Rows(unsigned char * target, unsigned char const * delta, int width, int dest_stride, bool do_copy)
 {
-	int const stride = width + nextrow;
+	// Port: the 4th parameter is the distance between two rows of the DESTINATION (WSA.CPP passes
+	// dest_width = Get_Width() + Get_XAdd() + Get_Pitch() at all three call sites). The first port
+	// treated it as the "skip to the next row" amount and used width + nextrow, which doubled the row
+	// distance for a full-width animation (320 + 320 = 640) and wrote far past the end of the
+	// destination buffer (it overwrote the following heap block: the WSA header of MSAB.WSA).
+	int const stride = dest_stride;
 	unsigned char * row_start = target;
 	int col = 0;
 	unsigned char * out = target;
@@ -152,7 +157,9 @@ void Apply_Delta_Rows(unsigned char * target, unsigned char const * delta, int w
 
 }	// namespace
 
-extern "C" void __cdecl Apply_XOR_Delta_To_Page_Or_Viewport(void * target, void * delta, int width, int nextrow, int copy)
+// `dest_stride` is the row distance of the destination buffer (not the original ASM's "nextrow" of
+// dest width - anim width: every caller in this code base passes the full destination row width).
+extern "C" void __cdecl Apply_XOR_Delta_To_Page_Or_Viewport(void * target, void * delta, int width, int dest_stride, int copy)
 {
-	Apply_Delta_Rows((unsigned char *)target, (unsigned char const *)delta, width, nextrow, copy != 0);
+	Apply_Delta_Rows((unsigned char *)target, (unsigned char const *)delta, width, dest_stride, copy != 0);
 }
