@@ -44,6 +44,16 @@
 #include	<stdio.h>
 #include	<ctype.h>
 
+/*
+**	Port: the constants below are used by the constructors of other global objects (OptionsClass
+**	Options, RulesClass Rule, ...). C++ does not order dynamic initialization across translation
+**	units, and with MSVC those constructors ran first and copied 0 (Options.Saturation = Tint = 0
+**	rendered the whole game in grey). Put this file's initializers into the "lib" init segment, which
+**	MSVC runs before the default user segment.
+*/
+#pragma warning(disable : 4073)
+#pragma init_seg(lib)
+
 
 /*
 **	These are some handy fixed point constants. Using these constants instead of manually
