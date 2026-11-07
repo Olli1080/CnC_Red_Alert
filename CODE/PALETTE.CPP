@@ -25,13 +25,17 @@
 
 RGBClass PaletteClass::CurrentPalette[PaletteClass::COLOR_COUNT];
 
+// NOTE: Set_Palette/Set_Palette_Range/Set_DD_Palette (WIN32LIB) take the 6-bit VGA DAC values
+// (0..63) that RGBClass stores internally - Set_DD_Palette shifts them left by 2 itself. Passing
+// Red_Component() (already scaled to 0..255) overflowed that shift ((68<<2)&255 == 16) and
+// garbled every colour on screen. Hand over the raw 6-bit gun values (RGBClass befriends us).
 void PaletteClass::Set(void) const
 {
 	unsigned char buffer[COLOR_COUNT * 3];
 	for (int i = 0; i < COLOR_COUNT; i++) {
-		buffer[i * 3 + 0] = (unsigned char)Colors[i].Red_Component();
-		buffer[i * 3 + 1] = (unsigned char)Colors[i].Green_Component();
-		buffer[i * 3 + 2] = (unsigned char)Colors[i].Blue_Component();
+		buffer[i * 3 + 0] = Colors[i].Red;
+		buffer[i * 3 + 1] = Colors[i].Green;
+		buffer[i * 3 + 2] = Colors[i].Blue;
 		CurrentPalette[i] = Colors[i];
 	}
 	::Set_Palette(buffer);
@@ -46,9 +50,9 @@ void PaletteClass::Set(int fade_delay, void (*callback)(void)) const
 
 	unsigned char buffer[COLOR_COUNT * 3];
 	for (int i = 0; i < COLOR_COUNT; i++) {
-		buffer[i * 3 + 0] = (unsigned char)Colors[i].Red_Component();
-		buffer[i * 3 + 1] = (unsigned char)Colors[i].Green_Component();
-		buffer[i * 3 + 2] = (unsigned char)Colors[i].Blue_Component();
+		buffer[i * 3 + 0] = Colors[i].Red;
+		buffer[i * 3 + 1] = Colors[i].Green;
+		buffer[i * 3 + 2] = Colors[i].Blue;
 		CurrentPalette[i] = Colors[i];
 	}
 	::Fade_Palette_To(buffer, (unsigned int)fade_delay, callback);

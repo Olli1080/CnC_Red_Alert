@@ -78,6 +78,8 @@ typedef enum {
 /*
 ------------------------------- Shape header --------------------------------
 */
+/* Westwood built with /zp1: these describe on-disk .SHP data, so pack to 1 byte */
+#pragma pack(push, 1)
 typedef struct {
 	unsigned short		ShapeType;			// 0 = normal, 1 = 16 colors,
 										//  2 = uncompressed, 4 = 	<16 colors
@@ -99,6 +101,9 @@ typedef struct {
 										//  0 being the first offset value, not the
 										//  start of the shape block)
 } ShapeBlock_Type;
+#pragma pack(pop)
+static_assert(sizeof(Shape_Type) == 26, "Shape_Type must be byte-packed (26 bytes)");
+static_assert(sizeof(ShapeBlock_Type) == 2, "ShapeBlock_Type must be byte-packed (2 bytes)");
 
 
 /*

@@ -950,9 +950,11 @@ GraphicBufferClass* Read_PCX_File(char* name, char* palette, void *Buff, long Si
 
 		pal = ( RGB * ) palette;
 		for (i = 0 ; i < 256 ; i ++) {
-			pal ->red	>>= 2;
-			pal ->green	>>= 2;
-			pal ->blue	>>= 2;
+			// Unsigned shift: RGB's fields are (signed) char, so '>>= 2' sign-extended every value >= 128
+			// into 0xE0..0xFF. VGA hardware masked those to 6 bits; RGBClass/the fade code do not.
+			pal ->red	= (char)((unsigned char)pal ->red >> 2);
+			pal ->green	= (char)((unsigned char)pal ->green >> 2);
+			pal ->blue	= (char)((unsigned char)pal ->blue >> 2);
 			pal ++ ;
 		}
 	}

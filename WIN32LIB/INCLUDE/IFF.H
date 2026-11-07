@@ -88,12 +88,16 @@ typedef enum {
 **	leading bytes that indicate the size of the entire file.
 */
 //lint -strong(AJX,CompHeaderType)
+/* On-disk header (Westwood built with /zp1): must be exactly 8 bytes. */
+#pragma pack(push, 1)
 typedef struct {
 	char	Method;		// Compression method (CompressionType).
 	char	pad;			// Reserved pad byte (always 0).
 	long	Size;			// Size of the uncompressed data.
 	short	Skip;			// Number of bytes to skip before data.
 } CompHeaderType;
+#pragma pack(pop)
+static_assert(sizeof(CompHeaderType) == 8, "CompHeaderType must be byte-packed (8 bytes)");
 
 
 /*=========================================================================*/

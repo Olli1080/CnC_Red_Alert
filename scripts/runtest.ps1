@@ -37,6 +37,7 @@ param(
     [int]$TimeoutSec = 20,
 
     [string]$CdbScript = '',     # optional cdb command file; default = run to first stop, print stack
+    [string]$GameArgs = '-CD.',  # command line for redalert.exe; -CD. = search the working dir for game data (no real CD)
 
     [switch]$KeepRunning         # 'run' only: do not kill the game if it is still alive at the timeout
 )
@@ -103,7 +104,7 @@ function Do-Deploy {
 function Do-Run {
     Do-Deploy
     Get-Process redalert -ErrorAction SilentlyContinue | Stop-Process -Force
-    $p = Start-Process -FilePath (Join-Path $TestDir 'redalert.exe') -WorkingDirectory $TestDir -PassThru
+    $p = Start-Process -FilePath (Join-Path $TestDir 'redalert.exe') -ArgumentList $GameArgs -WorkingDirectory $TestDir -PassThru
     $exited = $p.WaitForExit($TimeoutSec * 1000)
     if ($exited) {
         $code = $p.ExitCode
@@ -126,7 +127,7 @@ function Do-Debug {
         Set-Content -Path $CdbScript -Encoding ASCII -Value @('.lines', 'g', '.echo ==STOPPED', '.exr -1', 'k 25', 'q')
     }
     $log = Join-Path $TestDir 'cdb.log'
-    $args = @('-G', '-o', '-y', (Join-Path $BuildDir ("CODE\{0}" -f $Config)), '-cf', $CdbScript, (Join-Path $TestDir 'redalert.exe'))
+    $args = @('-G', '-o', '-y', (Join-Path $BuildDir ("CODE\{0}" -f $Config)), '-cf', $CdbScript, (Join-Path $TestDir 'redalert.exe'), $GameArgs)
     $p = Start-Process -FilePath $Cdb -ArgumentList $args -WorkingDirectory $TestDir -RedirectStandardOutput $log -NoNewWindow -PassThru
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
         Write-Host ("Debuggee still running after {0}s (no crash) - killing cdb + game." -f $TimeoutSec)

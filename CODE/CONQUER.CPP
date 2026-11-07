@@ -3408,7 +3408,7 @@ void CC_Draw_Shape(void const * shapefile, int shapenum, int x, int y, WindowNum
 {
 	int predoffset;
 #ifdef WIN32
-	unsigned	long	shape_pointer;
+	uintptr_t	shape_pointer;
 #endif	//WIN32
 
 
