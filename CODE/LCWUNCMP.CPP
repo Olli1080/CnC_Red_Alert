@@ -72,8 +72,13 @@ extern "C" {
  * HISTORY:                                                                *
  *    03/20/1995 IML : Created.                                            *
  *=========================================================================*/
-unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long )
-//unsigned long LCW_Uncompress (void * source, void * dest, unsigned long length)
+/* Port: LCW_Decode implements both entry points below. `limit` is the first byte that must not be
+   written (dest + length). The original assembler (WIN32LIB/IFF/LCWUNCMP.ASM) honored the `length`
+   argument - it stopped as soon as `length` bytes were produced and clamped every run to the remaining
+   space - and WSA.CPP depends on that: it decompresses a frame in place, with the compressed data at
+   the END of the destination, and for the largest frames the output overwrites the last bytes of the
+   source. The decoder then reads garbage past the real end marker; the clamp is what ends it. */
+static unsigned long LCW_Decode (void * source, void * dest, unsigned char * limit)
 {
 	unsigned char * source_ptr, * dest_ptr, * copy_ptr, op_code, data;
 	unsigned	  count, * word_dest_ptr, word_data;
@@ -84,6 +89,9 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 
 	while (1 /*TRUE*/) {
 
+		if (dest_ptr >= limit) return ((unsigned long) (dest_ptr - (unsigned char*) dest));
+		size_t remain = (size_t) (limit - dest_ptr);
+
 		/* Read in the operation code. */
 		op_code = *source_ptr++;
 
@@ -91,6 +99,7 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 
 			/* Do a short copy from destination. */
 			count	 = (op_code >> 4) + 3;
+			if (count > remain) count = (unsigned) remain;
 			copy_ptr = dest_ptr - ((unsigned) *source_ptr++ + (((unsigned) op_code & 0x0f) << 8));
 
 			while (count--) *dest_ptr++ = *copy_ptr++;
@@ -108,6 +117,7 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 
 					/* Do a medium copy from source. */
 					count = op_code & 0x3f;
+					if (count > remain) count = (unsigned) remain;
 
 					while (count--) *dest_ptr++ = *source_ptr++;
 				}
@@ -117,27 +127,16 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 				if (op_code == 0xfe) {
 
 					/* Do a long run. */
+					/* Port: the original C reference wrote the run in aligned 8-byte chunks, which can store up to 4
+					   bytes beyond the run and underflows `count` for short, misaligned runs. The WSA decoder
+					   decompresses in place (source at the end of the destination), where such stray writes
+					   destroy not-yet-read source bytes. Fill exactly `count` bytes instead. */
 					count = *source_ptr + ((unsigned) *(source_ptr + 1) << 8);
-					word_data = data = *(source_ptr + 2);
-					word_data  = (word_data << 24) + (word_data << 16) + (word_data << 8) + word_data;
+					data = *(source_ptr + 2);
 					source_ptr += 3;
+					if (count > remain) count = (unsigned) remain;
 
-					copy_ptr = dest_ptr + 4 - ((uintptr_t) dest_ptr & 0x3);
-					count -= (copy_ptr - dest_ptr);
-					while (dest_ptr < copy_ptr) *dest_ptr++ = data;
-
-					word_dest_ptr = (unsigned*) dest_ptr;
-
-					dest_ptr += (count & 0xfffffffc);
-
-					while (word_dest_ptr < (unsigned*) dest_ptr) {
-						*word_dest_ptr		= word_data;
-						*(word_dest_ptr + 1) = word_data;
-						word_dest_ptr += 2;
-					}
-
-					copy_ptr = dest_ptr + (count & 0x3);
-					while (dest_ptr < copy_ptr) *dest_ptr++ = data;
+					while (count--) *dest_ptr++ = data;
 
 				} else {
 
@@ -145,6 +144,7 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 
 						/* Do a long copy from destination. */
 						count	 = *source_ptr + ((unsigned) *(source_ptr + 1) << 8);
+						if (count > remain) count = (unsigned) remain;
 						copy_ptr = (unsigned char*) dest + *(source_ptr + 2) + ((unsigned) *(source_ptr + 3) << 8);
 						source_ptr += 4;
 
@@ -154,6 +154,7 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 
 						/* Do a medium copy from destination. */
 						count = (op_code & 0x3f) + 3;
+						if (count > remain) count = (unsigned) remain;
 						copy_ptr = (unsigned char*) dest + *source_ptr + ((unsigned) *(source_ptr + 1) << 8);
 						source_ptr += 2;
 
@@ -163,6 +164,18 @@ unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long 
 			}
 		}
 	}
+}
+
+/* The historic C reference ignored `length` (callers pass unrelated sizes), keep that. */
+unsigned long __cdecl LCW_Uncompress (void * source, void * dest, unsigned long)
+{
+	return LCW_Decode(source, dest, (unsigned char *) UINTPTR_MAX);
+}
+
+/* Same as the assembler: never writes at or beyond dest + length. Used by WSA.CPP. */
+unsigned long __cdecl LCW_Uncompress_Bounded (void * source, void * dest, unsigned long length)
+{
+	return LCW_Decode(source, dest, (unsigned char *) dest + length);
 }
 
 }

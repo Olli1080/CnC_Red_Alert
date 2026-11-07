@@ -123,10 +123,13 @@ typedef struct {
 // Port: the stored largest_frame_size is (real largest frame + sizeof(SysAnimHeaderType) of the 32-bit
 // build - EXTRA...), so Open_Animation subtracts sizeof(SysAnimHeaderType) again. With 64-bit pointers
 // the struct is bigger, which made that subtraction too large (delta buffer too small, the frame copy
-// started before the buffer and file_buffer ended up wild). Use the original size (Watcom's default
-// /zp2 packing, WIN32LIB/PROJECT.CFG: 7 shorts + 2 pointers + name[13] + 2 shorts + ulong = 44) for
-// that arithmetic and add the growth of the in-memory header to the allocation instead.
-#define WSA_ORIGINAL_HEADER_SIZE	44
+// started before the buffer and file_buffer ended up wild). Use the original size (Watcom /zp1 packing as
+// in WWFLAT32/PROJECT.CFG: 7 shorts + 2 pointers + name[13] + 2 shorts + ulong = 43) for that
+// arithmetic and add the growth of the in-memory header to the allocation instead. 43, not 44: the
+// frames are decompressed IN PLACE (compressed data at the end of the delta buffer) and the animation
+// tool sized the buffer to the byte - with 44 the output of the largest frames of MSAB/MSSB.WSA
+// overwrote one byte of not yet read source (op code of the final copy) and the XOR delta ran wild.
+#define WSA_ORIGINAL_HEADER_SIZE	43
 #define WSA_HEADER_GROWTH		((long)sizeof(SysAnimHeaderType) - WSA_ORIGINAL_HEADER_SIZE)
 
 
@@ -159,6 +162,7 @@ static_assert(sizeof(WSA_FileHeaderType) == 22, "WSA file header must be 22 byte
 /* The following PRIVATE functions are in this file:                       */
 /*=========================================================================*/
 
+extern "C" unsigned long __cdecl LCW_Uncompress_Bounded(void *source, void *dest, unsigned long length);
 PRIVATE unsigned long Get_Resident_Frame_Offset( char *file_buffer, int frame );
 PRIVATE unsigned long Get_File_Frame_Offset( int file_handle, int frame, int palette_adjust);
 PRIVATE BOOL Apply_Delta(SysAnimHeaderType *sys_header, int curr_frame, char *dest_ptr, int dest_w);
@@ -419,7 +423,7 @@ void * __cdecl Open_Animation(char const *file_name, char *user_buffer, long use
 		sys_header -> file_handle = (short)fh;
 	}
 
-	LCW_Uncompress(delta_back, delta_buffer, sys_header->largest_frame_size);
+	LCW_Uncompress_Bounded(delta_back, delta_buffer, sys_header->largest_frame_size);
 
 	// Finally set the flags,
 	sys_header->flags = (short)anim_flags;
@@ -1155,7 +1159,9 @@ PRIVATE BOOL Apply_Delta(SysAnimHeaderType *sys_header, int curr_frame, char *de
 	// Find start of target buffer.
 	// Apply the XOR delta.
 
-	LCW_Uncompress(delta_back, sys_header->delta_buffer, sys_header->largest_frame_size);
+	// Port: the bounded variant honors the length argument like the original assembler did (see
+	// LCW_Decode in CODE/LCWUNCMP.CPP) - the in-place decode of the largest frames needs it.
+	LCW_Uncompress_Bounded(delta_back, sys_header->delta_buffer, sys_header->largest_frame_size);
 
 	if (sys_header->flags & WSA_TARGET_IN_BUFFER) {
 		Apply_XOR_Delta(dest_ptr, sys_header->delta_buffer);
