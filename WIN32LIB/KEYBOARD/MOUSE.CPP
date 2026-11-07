@@ -36,6 +36,10 @@
 #include "mouse.h"
 #include <mmsystem.h>
 
+// Pointer position in game (640x400) coordinates rather than raw screen pixels (WIN32LIB/MISC/PRESENT_D3D.CPP).
+BOOL Get_Game_Cursor_Pos(POINT * pt);
+extern HWND MainWindow;
+
 static WWMouseClass *_Mouse=NULL;
 void CALLBACK Process_Mouse( UINT event_id, UINT res1 , DWORD_PTR user, DWORD_PTR  res2, DWORD_PTR  res3 );
 // See WIN32LIB/DRAWBUFF/GBUFFER.CPP's matching comment: this must match CODE/GLOBALS.CPP's real
@@ -162,10 +166,24 @@ void WWMouseClass::Set_Cursor_Clip(void)
 	if (Screen){
 		RECT	region;
 
-		region.left		= 0;
-		region.top 		= 0;
-		region.right	= Screen->Get_Width();
-		region.bottom	= Screen->Get_Height();
+		// The original clipped the real cursor to the game surface (640x400 in desktop pixels). Now
+		// the game surface is stretched over the whole window, so confine the pointer to the window
+		// (its client area in screen coordinates) instead; Get_Game_Cursor_Pos() rescales it.
+		if (MainWindow && GetClientRect(MainWindow, &region)) {
+			POINT	top_left		= {region.left, region.top};
+			POINT	bottom_right	= {region.right, region.bottom};
+			ClientToScreen(MainWindow, &top_left);
+			ClientToScreen(MainWindow, &bottom_right);
+			region.left		= top_left.x;
+			region.top 		= top_left.y;
+			region.right	= bottom_right.x;
+			region.bottom	= bottom_right.y;
+		} else {
+			region.left		= 0;
+			region.top 		= 0;
+			region.right	= Screen->Get_Width();
+			region.bottom	= Screen->Get_Height();
+		}
 
 		ClipCursor(&region);
 	}
@@ -208,7 +226,7 @@ void WWMouseClass::Process_Mouse(void)
 	//
 	// Get the mouse's current real cursor position
 	//
-	GetCursorPos(&pt);			// get the current cursor position
+	Get_Game_Cursor_Pos(&pt);			// get the current cursor position
 	//
 	// If the mouse has moved then we are responsible to redraw the mouse
 	//
@@ -356,7 +374,7 @@ void WWMouseClass::Low_Show_Mouse(int x, int y)
 void WWMouseClass::Show_Mouse()
 {
 	POINT	pt;
-	GetCursorPos(&pt);
+	Get_Game_Cursor_Pos(&pt);
 
 	MouseUpdate++;
 	Low_Show_Mouse(pt.x, pt.y);
@@ -410,7 +428,7 @@ void WWMouseClass::Conditional_Hide_Mouse(int x1, int y1, int x2, int y2)
 	// the hiding region and hide if necessary.
 	//
 	if (!(MCFlags & CONDHIDDEN)) {
-		GetCursorPos(&pt);
+		Get_Game_Cursor_Pos(&pt);
 		if (MouseBuffX >= MouseCXLeft && MouseBuffX <= MouseCXRight && MouseBuffY >= MouseCYUpper && MouseBuffY <= MouseCYLower) {
 			Low_Hide_Mouse();
 			MCFlags |= CONDHIDDEN;
@@ -459,7 +477,7 @@ void WWMouseClass::Draw_Mouse(GraphicViewPortClass *scr)
 	//
 	//	Get the position that the mouse is currently located at
 	//
-	GetCursorPos(&pt);
+	Get_Game_Cursor_Pos(&pt);
 	if (MCFlags & CONDHIDE && pt.x >= MouseCXLeft && pt.x <= MouseCXRight && pt.y >= MouseCYUpper && pt.y <= MouseCYLower) {
 		Hide_Mouse();
 		MCFlags |= CONDHIDDEN;
@@ -570,7 +588,7 @@ int WWMouseClass::Get_Mouse_State(void)
 int WWMouseClass::Get_Mouse_X(void)
 {
 	POINT 	pt;
-	GetCursorPos(&pt);
+	Get_Game_Cursor_Pos(&pt);
 	return(pt.x);
 }
 
@@ -588,7 +606,7 @@ int WWMouseClass::Get_Mouse_X(void)
 int WWMouseClass::Get_Mouse_Y(void)
 {
 	POINT 	pt;
-	GetCursorPos(&pt);
+	Get_Game_Cursor_Pos(&pt);
 	return(pt.y);
 }
 
@@ -607,7 +625,7 @@ void WWMouseClass::Get_Mouse_XY(int &x, int &y)
 {
 	POINT 	pt;
 
-	GetCursorPos(&pt);
+	Get_Game_Cursor_Pos(&pt);
 	x = pt.x;
 	y = pt.y;
 }

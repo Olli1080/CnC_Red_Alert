@@ -250,3 +250,56 @@ void Present_VisiblePage(void)
 	// draw, and staying non-blocking is what avoids needing dirty-rect tracking or throttling.
 	D3DSwapChain->Present(0, 0);
 }
+
+// The game runs at PresentWidth x PresentHeight (640x400 in the shipped data) while MainWindow is a
+// borderless popup covering the whole desktop (1920x1080 etc.), and DXGI stretches the back buffer
+// to the window. Everything that talks about mouse positions in game coordinates - the software
+// cursor, Get_Mouse_X/Y, and the click positions carried by WM_*BUTTON* - therefore has to be
+// rescaled from window-client pixels. Without this, the pointer lands far outside the menu.
+void Client_To_Game_Coords(int * x, int * y)
+{
+	if (!MainWindow || PresentWidth <= 0 || PresentHeight <= 0) return;
+
+	RECT client;
+	if (!GetClientRect(MainWindow, &client)) return;
+	int cw = client.right - client.left;
+	int ch = client.bottom - client.top;
+	if (cw <= 0 || ch <= 0) return;
+
+	int gx = (int)(((long long)*x * PresentWidth) / cw);
+	int gy = (int)(((long long)*y * PresentHeight) / ch);
+	if (gx < 0) gx = 0;
+	if (gy < 0) gy = 0;
+	if (gx >= PresentWidth) gx = PresentWidth - 1;
+	if (gy >= PresentHeight) gy = PresentHeight - 1;
+	*x = gx;
+	*y = gy;
+}
+
+// Drop-in replacement for GetCursorPos() that returns the pointer in game coordinates.
+BOOL Get_Game_Cursor_Pos(POINT * pt)
+{
+	if (!GetCursorPos(pt)) return FALSE;
+	if (MainWindow && ScreenToClient(MainWindow, pt)) {
+		int x = pt->x;
+		int y = pt->y;
+		Client_To_Game_Coords(&x, &y);
+		pt->x = x;
+		pt->y = y;
+	}
+	return TRUE;
+}
+
+// Present_VisiblePage() only runs when something Blit()s into VisiblePage, but the software mouse
+// cursor (and a few other things) are drawn straight into VisiblePage from a timer thread. Call
+// this from the main thread's input/message polling so those changes reach the screen too. It is
+// throttled to ~60 Hz; D3DContext is only ever touched from the main thread.
+void Present_VisiblePage_Throttled(void)
+{
+	static ULONGLONG last_present = 0;
+
+	ULONGLONG now = GetTickCount64();
+	if (now - last_present < 15) return;
+	last_present = now;
+	Present_VisiblePage();
+}

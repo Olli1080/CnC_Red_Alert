@@ -55,7 +55,7 @@ Alt-tab/focus/device-loss; window resize; movies (VQA/MPEG stubbed); WOL/modem m
 - Verify by *running*, not by compiling - see the pitfalls doc for why "it links" was misleading for 1c.
 
 ## Next concrete steps (start here)
-1. Ask the owner to confirm the menu looks right and whether the cursor shows/moves; if not: `WWMOUSE.CPP` (`ASM_Set_Mouse_Cursor`, `Draw_Mouse`) is a never-run ASM rewrite - compare with `WWMOUSE.ASM`.
+1. DONE (M3): menu correct, cursor visible and tracked, click coordinates right, "Exit Game" exits cleanly (x64_porting_pitfalls.md #16, #17). The menu has no hover highlight by design; keyboard Up/Down selects (`curbutton`).
 2. Click `Start New Game` (or inject the key) and let the next crash show the order of unproven code (`Buffer_Frame_To_Page`, `Buffer_Draw_Stamp`, `Linear_Scale_To_Linear`, sound).
 3. Proactively run the struct-packing audit (pragma_pack_leak_odr.md): `IControl_Type`, font header, `.WSA`, `KeyFrameHeaderType`, before they crash. Every instance so far was found only after a crash.
 4. Method that worked for visual bugs: dump the game's own buffers (palette, visible index buffer) and compare with an independent Python decode of the same file; see x64_porting_pitfalls.md #15.

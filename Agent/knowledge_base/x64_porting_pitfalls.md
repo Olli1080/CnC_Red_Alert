@@ -66,3 +66,14 @@ VGA DAC values are 0..63. `RGBClass` stores them raw; `Red_Component()` scales t
 - A temporary debug dump that `fopen`s a file can *itself* hang the game: a failed `fopen` -> `fwrite(NULL)` -> CRT assertion message box, and the game then appears stuck "before the title screen". Always NULL-check, overwrite one file instead of numbering, and remove the dump (`grep -rn TEMPDUMP`) before committing.
 - Verify data stage by stage against an independent reference (a 20-line Python decoder for LCW/PCX): compressed bytes -> decoded indices -> displayed indices -> palette. That bisected "picture looks cursed" to the palette in minutes after the decoders were proven bit-exact.
 - The desktop can be locked/hidden: a screenshot of the lock screen is not evidence about the game. Dump the game's own buffers instead.
+
+## 16. Mouse: coordinates, clip rectangle, and nothing presents the cursor - FIXED
+Three independent bugs made the menu "impossible to interact with":
+- **Scale.** The game runs at 640x400 but `MainWindow` is a borderless popup over the whole desktop (e.g. 1920x1080) and DXGI stretches the back buffer. `GetCursorPos()` (software cursor, `Get_Mouse_X/Y`) and the `lParam` of `WM_*BUTTON*` (`CODE/KEY.CPP`, `WWKeyboardClass::Message_Handler`) are window pixels. They now go through `Get_Game_Cursor_Pos` / `Client_To_Game_Coords` (`WIN32LIB/MISC/PRESENT_D3D.CPP`).
+- **`ClipCursor`.** `WWMouseClass::Set_Cursor_Clip` locked the real pointer to `0,0,Width,Height` = the top-left 640x400 *desktop pixels*. It now clips to the window's client area. Symptom: cursor "trapped top-left"; also makes scripted `SetCursorPos` tests land on (639,399).
+- **No present.** The software cursor is drawn into `VisiblePage` from a `timeSetEvent` thread, outside any `Blit()`, and `Present_VisiblePage` only ran from `Blit`. `WWKeyboardClass::Fill_Buffer_From_System` (polled in every loop) now calls `Present_VisiblePage_Throttled()` (~60 Hz, main thread only because the D3D context is not thread safe).
+Editing note: the *active* keyboard class is `CODE/KEY.CPP` (and `WIN32LIB/KEYBOARD/MOUSE.CPP`); `CODE/KEYBOARD.CPP` and `WIN32LIB/KEYBOARD/KEYBOARD.CPP`'s `WWKeyboardClass` are not what runs - check `CODE/CMakeLists.txt` and set a breakpoint before editing a same-named file.
+The main menu has **no hover highlight** by design (`TextButtonClass` only knows pressed / keyboard-selected via `curbutton`, `MENUS.CPP`); do not treat that as a bug.
+
+## 17. `bool` that held a state, not a flag (`ReadyToQuit`) - FIXED
+Watcom 10 had no real `bool`; `CODE/GLOBALS.CPP` declared `bool ReadyToQuit` but stored 1/2/3. With MSVC `ReadyToQuit = 2` stores `true` (1), so `do { Keyboard->Check(); } while (ReadyToQuit == 1);` in `STARTUP.CPP` (clean exit) and `WINSTUB.CPP` never ended: "Exit Game" left a black, busy window forever. Now `int`. Look for other multi-valued `bool` globals (grep `extern bool` in `EXTERNS.H` and compare against assignments of values >1).

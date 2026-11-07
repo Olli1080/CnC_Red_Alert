@@ -60,6 +60,9 @@
 
 //void Message_Loop(void);
 
+void Client_To_Game_Coords(int * x, int * y);
+void Present_VisiblePage_Throttled(void);
+
 //WWKeyboardClass * _Kbd = NULL;
 
 
@@ -530,6 +533,13 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
 			DispatchMessage(&msg);
 		}
 	}
+
+	/*
+	**	The software mouse cursor is drawn into VisiblePage from a timer thread, outside any Blit(),
+	**	so nothing else would ever put it on screen. Input polling runs continuously in every menu
+	**	and game loop, so present here (throttled to ~60 Hz; see WIN32LIB/MISC/PRESENT_D3D.CPP).
+	*/
+	Present_VisiblePage_Throttled();
 }
 
 
@@ -593,6 +603,14 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 	bool processed = false;
 
 	/*
+	**	Mouse messages carry window-client pixels, but the game works in its own 640x400 coordinate
+	**	space and the window is stretched over the whole desktop. Rescale (WIN32LIB/MISC/PRESENT_D3D.CPP).
+	*/
+	int mouse_x = (short)LOWORD(lParam);
+	int mouse_y = (short)HIWORD(lParam);
+	Client_To_Game_Coords(&mouse_x, &mouse_y);
+
+	/*
 	**	Examine the message to see if it is one that should be processed. Only keyboard and
 	**	pertinant mouse messages are processed.
 	*/
@@ -624,7 +642,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Press of the left mouse button.
 		*/
 		case WM_LBUTTONDOWN:
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam));
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y);
 			processed = true;
 			break;
 
@@ -632,7 +650,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Release of the left mouse button.
 		*/
 		case WM_LBUTTONUP:
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 
@@ -641,10 +659,10 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	just a rapid click of the left button twice.
 		*/
 		case WM_LBUTTONDBLCLK:
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam), true);
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_LBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y, true);
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_LBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 
@@ -652,7 +670,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Press of the middle mouse button.
 		*/
 		case WM_MBUTTONDOWN:
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam));
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y);
 			processed = true;
 			break;
 
@@ -660,7 +678,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Release of the middle mouse button.
 		*/
 		case WM_MBUTTONUP:
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 
@@ -669,10 +687,10 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	regular middle button clicks.
 		*/
 		case WM_MBUTTONDBLCLK:
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam), true);
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_MBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y, true);
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_MBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 
@@ -680,7 +698,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Right mouse button press.
 		*/
 		case WM_RBUTTONDOWN:
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam));
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y);
 			processed = true;
 			break;
 
@@ -688,7 +706,7 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	Right mouse button release.
 		*/
 		case WM_RBUTTONUP:
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 
@@ -697,10 +715,10 @@ bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LO
 		**	into being just two regular right button clicks.
 		*/
 		case WM_RBUTTONDBLCLK:
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam), true);
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam));
-			Put_Mouse_Message(VK_RBUTTON, LOWORD(lParam), HIWORD(lParam), true);
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y, true);
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y);
+			Put_Mouse_Message(VK_RBUTTON, mouse_x, mouse_y, true);
 			processed = true;
 			break;
 

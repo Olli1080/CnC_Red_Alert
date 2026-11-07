@@ -13,7 +13,7 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 | `Init_Keys` (INI + RSA key) | **fixed, committed `e75d5bf`**: leaked `#pragma pack` ([knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md)) |
 | `Bootstrap` (MIX parsing, `TEMPERAT.PAL`) | **fixed, committed `d1db96f`**: on-disk `MixFileClass::FileHeader` was 8 bytes instead of 6 (same document) |
 | `Init_Mouse`, `Init_CDROM_Access`, `Init_Color_Remaps`, title picture, palette | **fixed** (see `git log`): `.SHP` and `CompHeaderType` packing, 64-bit pointer math in `2KEYFRAM.CPP`, uninitialized `display` in `MSGBOX.CPP`, 6-bit vs 8-bit palette scale in `PaletteClass::Set`. Details: [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) #12-#15, [pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md) instances 3-4 |
-| **Main menu** | **reached**, renders. NOT yet verified: mouse cursor, button clicks (`Start New Game`), anything after the menu |
+| **Main menu** | **reached, renders, mouse works**: cursor is visible and follows the pointer over the whole window, click coordinates are correct (`MouseQX/QY` = 320,294 on "Exit Game"), and **"Exit Game" exits the process cleanly** (verified by a scripted click). Pitfalls #16 (mouse scale / `ClipCursor` / present) and #17 (`bool ReadyToQuit`). No hover highlight is by design. NOT yet verified: `Start New Game` and anything after it |
 | Everything after the menu (scenario load, map, units, audio) | never executed |
 | Presenter draw path (`Present_VisiblePage`, `Update_Palette_Texture`) | **runs and is correct** (displayed indices matched an independent decode exactly) |
 

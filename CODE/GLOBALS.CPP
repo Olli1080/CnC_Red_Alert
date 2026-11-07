@@ -788,7 +788,9 @@ TTimerClass<SystemTimerClass> TickCount = 0;
 #ifdef WIN32
 
 bool InDebugger = false;
-bool ReadyToQuit = false;
+// A state (0 running, 1 clean quit requested, 2 handled, 3 emergency), not a flag: with a real C++ bool
+// (MSVC) "ReadyToQuit = 2" stored 1 and the shutdown wait loops in STARTUP.CPP/WINSTUB.CPP never ended.
+int ReadyToQuit = 0;
 
 #else
 bool IsTheaterShape = false;	// must be defined only if not Win32
