@@ -1,6 +1,6 @@
 ---
 name: boot-to-main-menu
-description: Active plan - iterate redalert.exe from "crashes in Init_Mouse" to "shows the main menu"; ordered next steps, hypotheses, acceptance criteria, and the loop to follow
+description: Active plan - redalert.exe now boots to a rendering main menu (M1+M2 done); remaining milestones M3-M5 (input, scenario/map rendering, audio), ordered steps, and the loop to follow
 metadata:
   type: plan
 ---
@@ -8,6 +8,9 @@ metadata:
 # Plan: get `redalert.exe` from the current crash to the main menu
 
 Parent plan: [modernization_cmake_vcpkg.md](modernization_cmake_vcpkg.md) (Phases 0-3 done; this is the runtime-bring-up tail of Phase 1/3). Start with [../HANDOFF.md](../HANDOFF.md) for state, tools and rules.
+
+## Status (2026-11-07): M1 and M2 DONE
+`Init_Game` returns and the main menu renders correctly (title art, palette, buttons, text) and idles in `Main_Menu`. Not yet verified: the mouse cursor and clicking. Next: verify input, then M4.
 
 ## Goal / definition of done
 1. **M1**: `Init_Game()` returns (no crash) - all of `Bootstrap`, `Init_Mouse`, fonts, palette, one-time systems pass.
@@ -28,8 +31,8 @@ Write each *class* of bug down in `knowledge_base/x64_porting_pitfalls.md` as yo
 ### Step 0 - already done (for reference)
 The fixes that got the boot from `Init_Keys` to `Init_Mouse` are committed: `e75d5bf` (pragma pack scoping - [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md)), `d1db96f` (MIX `FileHeader` packing), `eacb07d` (`Set_DD_Palette` now fills `PaletteEntries[]` unconditionally - previously gated on `PaletteSurface`, always NULL now, which would have left the D3D11 palette texture zero => permanently black screen - plus a `Wait_Blit` NULL guard; *reasoned and builds, not yet exercised at runtime*), `ef0fee9` (script + docs).
 
-### Step 1 - current blocker: `Init_Mouse` -> `Get_Shape_Uncomp_Size` (predicted: `.SHP` header packing)
-Full evidence and the predicted fix in [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md) "Instance 3". Pack `Shape_Type` and `ShapeBlock_Type` in `WIN32LIB/INCLUDE/SHAPE.H` (and the `WIN32LIB/SHAPE/` copy if present) with `static_assert`s, rebuild, rerun. **Then run the audit in that document (steps 1-2) proactively for all other on-disk structs** rather than waiting for each to crash: `IControl_Type` (icon sets), font headers, `.WSA`, `2KEYFRAM` key-frame headers, palette/CPS loaders.
+### Step 1 - DONE: `Init_Mouse` -> `Get_Shape_Uncomp_Size` (was `.SHP` header packing)
+Fixed and verified (see also instance 4, `CompHeaderType`). Evidence in [../knowledge_base/pragma_pack_leak_odr.md](../knowledge_base/pragma_pack_leak_odr.md) "Instance 3". Pack `Shape_Type` and `ShapeBlock_Type` in `WIN32LIB/INCLUDE/SHAPE.H` (and the `WIN32LIB/SHAPE/` copy if present) with `static_assert`s, rebuild, rerun. **Then run the audit in that document (steps 1-2) proactively for all other on-disk structs** rather than waiting for each to crash: `IControl_Type` (icon sets), font headers, `.WSA`, `2KEYFRAM` key-frame headers, palette/CPS loaders.
 Caveat: `ASM_Set_Mouse_Cursor` (`WIN32LIB/KEYBOARD/WWMOUSE.CPP`) is one of the 1c rewrites that has *never run*; once the header packing is fixed, re-read it against `WIN32LIB/KEYBOARD/WWMOUSE.ASM` if the cursor draws wrong.
 
 ### Step 2 - the never-executed 1c primitives will fail in their own ways
@@ -50,3 +53,9 @@ Alt-tab/focus/device-loss; window resize; movies (VQA/MPEG stubbed); WOL/modem m
 - Don't hard-link `REDALERT.INI` (the game rewrites it; that once modified the owner's Steam file). Use the script.
 - Keep duplicate headers (`WIN32LIB/INCLUDE/X.H` vs `WIN32LIB/<MODULE>/X.H`) in sync; `SRCDEBUG/`, `OLD*/`, `*.BAK` are dead.
 - Verify by *running*, not by compiling - see the pitfalls doc for why "it links" was misleading for 1c.
+
+## Next concrete steps (start here)
+1. Ask the owner to confirm the menu looks right and whether the cursor shows/moves; if not: `WWMOUSE.CPP` (`ASM_Set_Mouse_Cursor`, `Draw_Mouse`) is a never-run ASM rewrite - compare with `WWMOUSE.ASM`.
+2. Click `Start New Game` (or inject the key) and let the next crash show the order of unproven code (`Buffer_Frame_To_Page`, `Buffer_Draw_Stamp`, `Linear_Scale_To_Linear`, sound).
+3. Proactively run the struct-packing audit (pragma_pack_leak_odr.md): `IControl_Type`, font header, `.WSA`, `KeyFrameHeaderType`, before they crash. Every instance so far was found only after a crash.
+4. Method that worked for visual bugs: dump the game's own buffers (palette, visible index buffer) and compare with an independent Python decode of the same file; see x64_porting_pitfalls.md #15.

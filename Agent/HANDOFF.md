@@ -1,9 +1,9 @@
 # HANDOFF - read this first
 
-*Last updated 2026-09-20. If anything here disagrees with the code, trust the code and fix this file.*
+*Last updated 2026-11-07. If anything here disagrees with the code, trust the code and fix this file.*
 
 ## 1. Where the project stands (one paragraph)
-This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It is being **modernized to build with CMake + vcpkg on MSVC 2026, x64 only** (see [plans_wip/modernization_cmake_vcpkg.md](plans_wip/modernization_cmake_vcpkg.md)). `win32lib.lib`, `redalert_code.lib` and **`redalert.exe` all build with 0 errors and 0 unresolved externals** (all ~66 remaining `.ASM` files were rewritten in C++; there is no assembler dependency). Run against the owner's own game data, the exe now boots through window creation, D3D11 device setup, INI parsing, RSA key init, and MIX-archive parsing, and **crashes in `Init_Mouse`**. Nothing has ever been drawn on screen yet. The job is the bring-up loop: run -> crash -> root-cause -> fix, until the main menu shows ([plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md)).
+This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It is being **modernized to build with CMake + vcpkg on MSVC 2026, x64 only** (see [plans_wip/modernization_cmake_vcpkg.md](plans_wip/modernization_cmake_vcpkg.md)). `win32lib.lib`, `redalert_code.lib` and **`redalert.exe` all build with 0 errors and 0 unresolved externals** (all ~66 remaining `.ASM` files were rewritten in C++; there is no assembler dependency). Run against the owner's own game data with `scripts/runtest.ps1`, the exe now **boots all the way to the main menu**: `Init_Game` completes, the title picture and the menu (buttons, text) are drawn through the D3D11 presenter with the correct palette, and the game idles in `Main_Menu`'s input loop. Milestones M1 and M2 of [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) are reached; the work now is M3 (mouse cursor, button input), M4 (load a scenario, draw the map - exercises the unproven `Buffer_Frame_To_Page`/stamp code) and M5 (audio).
 
 ## 2. Status at a glance
 | Stage | State |
@@ -12,9 +12,10 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 | DirectDraw 8-bit wall | **worked around** by a Direct3D 11 presenter (`WIN32LIB/MISC/PRESENT_D3D.CPP`), committed `86f6b00`. Modern DirectDraw refuses *any* 8-bit surface (`DDERR_INVALIDPIXELFORMAT`), so `VisiblePage` falls back to plain system memory and D3D11 uploads it as an `R8_UINT` texture + a 256x1 palette texture; a 2-line pixel shader expands it |
 | `Init_Keys` (INI + RSA key) | **fixed, committed `e75d5bf`**: leaked `#pragma pack` ([knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md)) |
 | `Bootstrap` (MIX parsing, `TEMPERAT.PAL`) | **fixed, committed `d1db96f`**: on-disk `MixFileClass::FileHeader` was 8 bytes instead of 6 (same document) |
-| **`Init_Mouse`** | **CURRENT BLOCKER**: `Get_Shape_Uncomp_Size` faults reading a `.SHP` header. Predicted cause: `Shape_Type`/`ShapeBlock_Type` in `WIN32LIB/INCLUDE/SHAPE.H` need byte packing (same bug class). Not yet fixed |
-| Everything after (fonts, palette, menus, map, audio) | never executed |
-| Presenter *draw path* (`Present_VisiblePage`, `Update_Palette_Texture`) | written and reviewed, **never run** |
+| `Init_Mouse`, `Init_CDROM_Access`, `Init_Color_Remaps`, title picture, palette | **fixed** (see `git log`): `.SHP` and `CompHeaderType` packing, 64-bit pointer math in `2KEYFRAM.CPP`, uninitialized `display` in `MSGBOX.CPP`, 6-bit vs 8-bit palette scale in `PaletteClass::Set`. Details: [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) #12-#15, [pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md) instances 3-4 |
+| **Main menu** | **reached**, renders. NOT yet verified: mouse cursor, button clicks (`Start New Game`), anything after the menu |
+| Everything after the menu (scenario load, map, units, audio) | never executed |
+| Presenter draw path (`Present_VisiblePage`, `Update_Palette_Texture`) | **runs and is correct** (displayed indices matched an independent decode exactly) |
 
 **The one insight that will save you the most time:** Westwood compiled `CODE/` with `/zp1` (byte-packed structs, `CODE/MAKEFILE:113`); MSVC defaults to 8-byte alignment. Every on-disk/network/shared struct is potentially the wrong size. Two of the last three crashes were this. Read [knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md) and run its audit *proactively*.
 
@@ -23,11 +24,13 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 git status                                   # expect a clean tree (everything below is committed)
 .\scripts\runtest.ps1 build                  # Debug build of the redalert target (first time also runs cmake --preset Main)
 .\scripts\runtest.ps1 setup                  # build\runtest\ : hard-linked MIX files + PRIVATE REDALERT.INI copy
-.\scripts\runtest.ps1 debug                  # runs under cdb -> exception record + symbolized stack (expect Get_Shape_Uncomp_Size)
+.\scripts\runtest.ps1 debug                  # runs under cdb; with no crash it reports 'still running' after the timeout (expected now: the game sits in the main menu)
+.\scripts\runtest.ps1 run -KeepRunning -TimeoutSec 20   # leave the window open for the owner to look at
 ```
-Prereqs and cdb recipes (write-watchpoints, template-symbol quirks, the `-g` trap): [knowledge_base/debugging_and_runtime_testing.md](knowledge_base/debugging_and_runtime_testing.md). Then open [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) and start at Step 1.
+`runtest.ps1` passes `-CD.` to the game by default (`-GameArgs`), which makes it look for data in the working directory instead of a physical CD drive (without it `Force_CD_Available` pops the 'insert CD' dialog). Python on this machine: `python` is 2.7, use `py -3`. Prereqs and cdb recipes (write-watchpoints, template-symbol quirks, the `-g` trap): [knowledge_base/debugging_and_runtime_testing.md](knowledge_base/debugging_and_runtime_testing.md). Then open [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) and continue at 'Next concrete steps' at its end.
 
-## 4. Fixes made in the most recent session (all committed; verify with `git log -6`)
+## 4. Fixes made (verify with `git log`). Newest session first
+Session 2026-11-07: `SHAPE.H` x2 packed; `IFF.H` x2 `CompHeaderType` packed; `2KEYFRAM.CPP`/`FUNCTION.H`/`CONQUER.CPP` 64-bit-safe shape cache (`Build_Frame` returns `uintptr_t`); `MSGBOX.CPP` `display` initialised; `PALETTE.CPP` raw 6-bit palette; `WINSTUB.CPP` unsigned palette shift; `scripts/runtest.ps1` `-GameArgs` (`-CD.`). Earlier session:
 | Commit | What / why |
 |---|---|
 | `e75d5bf` | `#pragma pack` scoped with push/pop in `AUDIO.H`/`SOUNDINT.H` (both copies) - fixes the `IndexClass` crash in `Init_Keys` |

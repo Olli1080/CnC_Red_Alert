@@ -36,18 +36,16 @@ Caveat worth knowing: that leak had been *accidentally* byte-packing (part of) m
 Fix (verified: `Bootstrap` passes, `TEMPERAT.PAL` found, boot advances to `Init_Mouse`): `#pragma pack(push,1)` around the struct + `static_assert(sizeof(FileHeader) == 6)`. Committed as `d1db96f` (`CODE/MIXFILE.H`).
 (`SubBlock` is three `long`s = 12 bytes either way; the `alternate` struct is two `short`s = 4 bytes either way.)
 
-## Instance 3 (PREDICTED, not yet fixed): `.SHP` headers -> crash in `Init_Mouse`
-Current crash: `Init_Game` -> `Init_Mouse` -> `Set_Mouse_Cursor` -> `WWMouseClass::Set_Cursor` -> `ASM_Set_Mouse_Cursor` (`WWMOUSE.CPP:155`) -> `Get_Shape_Uncomp_Size` (`GETSHAPE.CPP:111`) reading `shp->DataLength` from a wild address (`...c71`, odd => misinterpreted offset). `WIN32LIB/INCLUDE/SHAPE.H:81-101`:
-```c
-typedef struct { unsigned short ShapeType; unsigned char Height; unsigned short Width;
-                 unsigned char OriginalHeight; unsigned short ShapeSize; unsigned short DataLength;
-                 unsigned char Colortable[16]; } Shape_Type;          // 26 bytes packed, larger unpacked
-typedef struct { unsigned short NumShapes; long Offsets[]; } ShapeBlock_Type;   // Offsets at +2 packed, +4 unpacked
-```
-`Extract_Shape` indexes `Offsets[]` from the wrong place, returns a bad pointer, and the header read faults. **Next action: pack both (in both copies of `SHAPE.H`, plus any duplicate definitions - `grep -rn "Shape_Type\|ShapeBlock_Type"`), add `static_assert`s (`Shape_Type` = 26 bytes... verify against `TOOLS`/file dumps), rebuild, rerun.**
+## Instance 3 (VERIFIED, fixed): `.SHP` headers -> crash in `Init_Mouse`
+Crash was `Init_Game` -> `Init_Mouse` -> `Set_Mouse_Cursor` -> `WWMouseClass::Set_Cursor` -> `ASM_Set_Mouse_Cursor` -> `Get_Shape_Uncomp_Size` reading `shp->DataLength` from a wild address. `WIN32LIB/INCLUDE/SHAPE.H` (and the identical `WIN32LIB/SHAPE/SHAPE.H`): `Shape_Type` (26 bytes packed) and `ShapeBlock_Type` (`Offsets[]` at +2 packed, +4 unpacked) were compiled unpacked, so `Extract_Shape` indexed `Offsets[]` from the wrong place.
+Fix: `#pragma pack(push,1)`/`pop` around both + `static_assert(sizeof(Shape_Type)==26)` and `sizeof(ShapeBlock_Type)==2`. **Verified by re-running: the crash moved past `Init_Mouse`.** (`VQ/INCLUDE/WWLIB32/SHAPE.H`, `WWFLAT32/**/SHAPE.H` are other copies that are not part of this build.)
+
+## Instance 4 (VERIFIED, fixed): `CompHeaderType` -> `LCW_Uncompress` wrote past the buffer
+`WIN32LIB/INCLUDE/IFF.H` (+ `WIN32LIB/IFF/IFF.H`): `struct { char Method; char pad; long Size; short Skip; }` is the 8-byte header in front of every compressed block (`.CPS`, loaded via `Load_Uncompress`/`Uncompress_Data`). Unpacked it is 12 bytes with `Size` at +4 instead of +2, so the "uncompressed size", skip count and the in-place source position were all wrong; `LCW_Uncompress` crashed in `Init_Color_Remaps` -> `Load_Picture("PALETTE.CPS")`. Fix: pack + `static_assert(sizeof == 8)`. After the fix `PALETTE.CPS` decodes **bit-identically** to an independent Python reference decoder (only the last byte differs: harmless in-place overlap with the end marker).
 
 ---
 ## Audit method - find every struct that needs packing
+**Still to audit proactively** (four instances found so far, each one only after it crashed): `IControl_Type` (icon sets), font headers (`FONT.H`), `.WSA`, `KeyFrameHeaderType` (`2KEYFRAM`), `.AUD` headers (done), save-game structs, network packets.
 1. `grep -rnE "(Read|Get|Write|Put|fread|fwrite)\s*\([^;]*sizeof" CODE WIN32LIB --include=*.CPP --include=*.H` - structs passed to file/stream I/O with `sizeof`.
 2. `grep -rn "typedef struct" WIN32LIB/INCLUDE/*.H CODE/*.H` in format-related headers: `SHAPE.H` (.SHP), `MIXFILE.H`, `ICONCACH.H`/`TILE` (`IControl_Type`, `.TMP` icon sets), `FONT.H` (`.FNT`), `WSA.H` (`.WSA` animation headers), `AUDIO.H` (`AUDHeaderType` - already packed), `CODE/2KEYFRAM.CPP`/`2KEYFRAM.H` (`KeyFrameHeaderType`), `CODE/CDATA`/`SAVELOAD.CPP` (save games; also contain pointers - see [x64_porting_pitfalls.md](x64_porting_pitfalls.md) #1), `CODE/EVENT.H`/`PACKET`-style network structs (multiplayer; out of scope for now).
 3. For each: find the real on-disk size (from the original tools in `TOOLS/`, the ASM that read it, or the field-by-field comment), then `#pragma pack(push,1)`/`pop` + `static_assert(sizeof(T) == N, ...)`. The `static_assert` is what makes the next agent's life easy - a wrong size becomes a compile error instead of a runtime crash three call layers away.
