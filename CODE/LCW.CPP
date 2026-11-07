@@ -1,3 +1,5 @@
+#include <stdint.h>		// Port: uintptr_t
+
 /*
 **	Command & Conquer Red Alert(tm)
 **	Copyright 2025 Electronic Arts Inc.
@@ -118,7 +120,7 @@ int LCW_Uncomp(void const * source, void * dest, unsigned long )
 					word_data  = (word_data << 24) + (word_data << 16) + (word_data << 8) + word_data;
 					source_ptr += 3;
 
-					copy_ptr = dest_ptr + 4 - ((unsigned) dest_ptr & 0x3);
+					copy_ptr = dest_ptr + 4 - ((uintptr_t) dest_ptr & 0x3);
 					count -= (copy_ptr - dest_ptr);
 					while (dest_ptr < copy_ptr) *dest_ptr++ = data;
 

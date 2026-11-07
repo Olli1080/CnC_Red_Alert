@@ -2657,7 +2657,7 @@ long MixFileHandler(VQAHandle * vqa, long action, void * buffer, long nbytes)
 				error = file->Open((char *)buffer, READ);
 
 				if (error != -1) {
-					vqa->VQAio = (unsigned long)file;
+					vqa->VQAio = (uintptr_t)file;		// Port: VQAio is pointer sized now (was unsigned long).
 					error = 0;
 				} else {
 					delete file;

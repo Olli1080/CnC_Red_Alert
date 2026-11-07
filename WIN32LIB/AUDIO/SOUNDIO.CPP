@@ -1823,7 +1823,7 @@ int Play_Sample_Handle(void const *sample, int priority, int volume, signed shor
 	//
 	// Decompress the sample into the direct sound buffer
 	//
-	st->DestPtr=(void*)Sample_Copy ( 	st,
+	st->DestPtr=(void*)(uintptr_t)Sample_Copy ( 	st,
 								&st->Source,
 								&st->Remainder,
 								&st->QueueBuffer,
@@ -1850,7 +1850,9 @@ int Play_Sample_Handle(void const *sample, int priority, int volume, signed shor
 		st->Service=TRUE;				//We still need to service it so that we can stop it when
 											// it plays past the end of the sample data
 		//memset ( (char*)( (unsigned)play_buffer_ptr + (unsigned)st->DestPtr ), 0 , SECONDARY_BUFFER_SIZE - (unsigned)st->DestPtr );
-		memset ( (char*)( (unsigned)play_buffer_ptr + (unsigned)st->DestPtr ), 0 , SECONDARY_BUFFER_SIZE/4);
+		// Port: was (unsigned)play_buffer_ptr + (unsigned)st->DestPtr, which truncated both pointers to
+		// 32 bit and wrote to a wild address (crash on the first sidebar click sound).
+		memset ( (char*)play_buffer_ptr + (uintptr_t)st->DestPtr, 0 , SECONDARY_BUFFER_SIZE/4);
 	}
 
 	st->PlayBuffer->Unlock(	play_buffer_ptr,

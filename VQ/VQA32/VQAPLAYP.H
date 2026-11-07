@@ -466,7 +466,7 @@ typedef struct _VQAData {
  * vocfh     - Override audiotrack file handle.
  */
 typedef struct _VQAHandleP {
-	unsigned long VQAio;
+	uintptr_t VQAio;		/* Port: holds a pointer (CONQUER.CPP MixFileHandler), so pointer sized */
 	long          (*IOHandler)(VQAHandle *vqa, long action, void *buffer,
 	                          long nbytes);
 	VQAData       *VQABuf;

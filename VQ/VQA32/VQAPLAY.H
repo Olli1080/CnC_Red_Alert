@@ -277,7 +277,7 @@ typedef struct _VQAStatistics {
  * VQAio - Something meaningful to the IO manager. (See DOCS)
  */
 typedef struct _VQAHandle {
-	unsigned long VQAio;
+	uintptr_t VQAio;		/* Port: holds a pointer (CONQUER.CPP MixFileHandler), so pointer sized */
 } VQAHandle;
 
 /* Possible IO command values */

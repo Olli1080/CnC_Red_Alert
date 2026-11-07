@@ -1245,6 +1245,16 @@ bool MapClass::Remove_Crate(CELL cell)
  * HISTORY:                                                                *
  *   07/08/1995 BRR : Created.                                             *
  *=========================================================================*/
+// Port: the original rejected any pointer with a non-zero top byte ((unsigned)p & 0xff000000), a 32-bit-era
+// heuristic for "this is not a heap address". On x64 every heap pointer has such bits, so test what is
+// still meaningful: non-canonical addresses (this also catches the debug heap fill patterns 0xCDCD..,
+// 0xDDDD.., 0xFDFD..) and misalignment. NULL is fine (end of a list).
+static bool Pointer_Looks_Bad(void const * p)
+{
+	uintptr_t v = (uintptr_t)p;
+	return(v != 0 && ((v >> 47) != 0 || (v & 3) != 0));
+}
+
 int MapClass::Validate(void)
 {
 	CELL cell;
@@ -1326,8 +1336,8 @@ if (BlubCell->Overlapper[1]) {
 		obj = (*this)[cell].Cell_Occupier();
 		if (obj) {
 			if (
-				((unsigned int)obj & 0xff000000) ||
-				((unsigned int)obj->Next & 0xff000000) ||
+				Pointer_Looks_Bad(obj) ||
+				Pointer_Looks_Bad(obj->Next) ||
 //				((unsigned int)obj->Trigger & 0xff000000) ||
 				obj->IsInLimbo ||
 				((unsigned int)Coord_Cell(obj->Coord) >= MAP_CELL_TOTAL)) {
@@ -1343,8 +1353,8 @@ if (BlubCell->Overlapper[1]) {
 			obj = (*this)[cell].Overlapper[i];
 			if (obj) {
 				if (
-					((unsigned int)obj & 0xff000000) ||
-					((unsigned int)obj->Next & 0xff000000) ||
+					Pointer_Looks_Bad(obj) ||
+					Pointer_Looks_Bad(obj->Next) ||
 //					((unsigned int)obj->Trigger & 0xff000000) ||
 					obj->IsInLimbo ||
 					((unsigned int)Coord_Cell(obj->Coord) >= MAP_CELL_TOTAL)) {

@@ -746,7 +746,7 @@ long RawFileClass::Read(void *buffer, long size)
 				**	No error occurred during the read. Adjust the pointers and size counters and
 				**	loop again if more data is needed to be read.
 				*/
-				buffer = (void *) ((long)buffer + actual);
+				buffer = (void *) ((char *)buffer + actual);		// Port: was (long)buffer, which truncates a 64-bit pointer.
 				bytesread += actual;
 				size -= actual;
 				if (actual != desired) break;		// No more data?
@@ -836,7 +836,7 @@ long RawFileClass::Write(void const *buffer, long size)
 				/*
 				**	A successful write occurred. Update pointers and byte counter as appropriate.
 				*/
-				buffer = (void *)((long)buffer + actual);
+				buffer = (void *)((char *)buffer + actual);		// Port: was (long)buffer, which truncates a 64-bit pointer.
 				bytesread += actual;
 				size -= actual;
 
