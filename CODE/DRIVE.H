@@ -122,7 +122,7 @@ class DriveClass : public FootClass
 		**	These enumerations are used as working constants that exist only
 		**	in the DriveClass namespace.
 		*/
-		enum DriveClassEnum {
+		enum DriveClassEnum : unsigned char {
 			BACKUP_INTO_REFINERY=64,		// Track to backup into refinery.
 			OUT_OF_REFINERY,					// Track to leave refinery.
 			OUT_OF_WEAPON_FACTORY			// Track to leave weapons factory.
@@ -132,7 +132,7 @@ class DriveClass : public FootClass
 		**	Smooth turning tracks are controlled by this structure and these
 		**	processing bits.
 		*/
-		typedef enum TrackControlType {
+		typedef enum TrackControlType : unsigned char {
 			F_=0x00,		// No translation necessary?
 			F_T=0x01,	// Transpose X and Y components?
 			F_X=0x02,	// Reverse X component sign?

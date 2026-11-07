@@ -56,6 +56,6 @@ Alt-tab/focus/device-loss; window resize; movies (VQA/MPEG stubbed); WOL/modem m
 
 ## Next concrete steps (start here)
 1. DONE (M3): menu correct, cursor visible and tracked, click coordinates right, "Exit Game" exits cleanly (x64_porting_pitfalls.md #16, #17). The menu has no hover highlight by design; keyboard Up/Down selects (`curbutton`).
-2. Click `Start New Game` (or inject the key) and let the next crash show the order of unproven code (`Buffer_Frame_To_Page`, `Buffer_Draw_Stamp`, `Linear_Scale_To_Linear`, sound).
+2. DONE up to the first logic ticks (see HANDOFF). Continue the same loop with `scripts/runtest.ps1 debug` (the owner clicks Start New Game > Allies; the stack lands in `build\runtest\cdb.log`). Do not start/stop the game while the owner is using it. Original item: click `Start New Game` (or inject the key) and let the next crash show the order of unproven code (`Buffer_Frame_To_Page`, `Buffer_Draw_Stamp`, `Linear_Scale_To_Linear`, sound).
 3. Proactively run the struct-packing audit (pragma_pack_leak_odr.md): `IControl_Type`, font header, `.WSA`, `KeyFrameHeaderType`, before they crash. Every instance so far was found only after a crash.
 4. Method that worked for visual bugs: dump the game's own buffers (palette, visible index buffer) and compare with an independent Python decode of the same file; see x64_porting_pitfalls.md #15.

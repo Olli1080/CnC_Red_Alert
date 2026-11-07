@@ -535,7 +535,14 @@ assert(filename != NULL);//BG
 	/*
 	**	Create the key block that will be used to binary search for the file.
 	*/
-	long crc = Calculate_CRC(strupr((char *)filename), strlen(filename));
+	// Port: the original upper-cased the caller's string in place (strupr((char *)filename)). Callers
+	// pass string literals, which MSVC keeps in read-only memory, so that was an access violation.
+	// Upper-case a local copy instead; the CRC only depends on the upper-cased bytes.
+	char upper_name[_MAX_PATH];
+	strncpy(upper_name, filename, sizeof(upper_name) - 1);
+	upper_name[sizeof(upper_name) - 1] = '\0';
+	strupr(upper_name);
+	long crc = Calculate_CRC(upper_name, strlen(upper_name));
 	SubBlock key;
 	key.CRC = crc;
 

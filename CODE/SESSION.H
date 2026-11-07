@@ -119,7 +119,7 @@ class CellClass;
 //...........................................................................
 // Types of games; used to tell which protocol we're using
 //...........................................................................
-typedef enum GameEnum {
+typedef enum GameEnum : unsigned char {
 	GAME_NORMAL,									// not multiplayer
 	GAME_MODEM,										// modem game
 	GAME_NULL_MODEM,								// NULL-modem
@@ -133,13 +133,13 @@ typedef enum GameEnum {
 //...........................................................................
 // Various Modem-specific enums
 //...........................................................................
-typedef enum DetectPortType {
+typedef enum DetectPortType : unsigned char {
 	PORT_VALID = 0,
 	PORT_INVALID,
 	PORT_IRQ_INUSE
 } DetectPortType;
 
-typedef enum DialStatusType {
+typedef enum DialStatusType : unsigned char {
 	DIAL_CONNECTED			= 0,
 	DIAL_NO_CARRIER,
 	DIAL_BUSY,
@@ -148,13 +148,13 @@ typedef enum DialStatusType {
 	DIAL_CANCELED
 } DialStatusType;
 
-typedef enum DialMethodType {
+typedef enum DialMethodType : unsigned char {
 	DIAL_TOUCH_TONE = 0,
 	DIAL_PULSE,
 	DIAL_METHODS
 } DialMethodType;
 
-typedef enum CallWaitStringType {
+typedef enum CallWaitStringType : unsigned char {
 	CALL_WAIT_TONE_1 = 0,
 	CALL_WAIT_TONE_2,
 	CALL_WAIT_PULSE,
@@ -162,7 +162,7 @@ typedef enum CallWaitStringType {
 	CALL_WAIT_STRINGS_NUM
 } CallWaitStringType;
 
-typedef enum ModemGameType {
+typedef enum ModemGameType : unsigned char {
 	MODEM_NULL_HOST = 0,
 	MODEM_NULL_JOIN,
 	MODEM_DIALER,
@@ -172,7 +172,7 @@ typedef enum ModemGameType {
 //...........................................................................
 // Commands sent over the serial Global Channel
 //...........................................................................
-typedef enum SerialCommandType {
+typedef enum SerialCommandType : unsigned short {
 	SERIAL_CONNECT			= 100,	// Are you there?  Hello?  McFly?
 	SERIAL_GAME_OPTIONS	= 101,	// Hey, dudes, here's some new game options
 	SERIAL_SIGN_OFF		= 102,	// Bogus, dudes, my boss is coming; I'm outta here!
@@ -192,7 +192,7 @@ typedef enum SerialCommandType {
 //...........................................................................
 // Commands sent over the network Global Channel
 //...........................................................................
-typedef enum NetCommandType {
+typedef enum NetCommandType : unsigned short {
 	NET_QUERY_GAME,			// Hey, what games are out there?
 	NET_ANSWER_GAME,			// Yo, Here's my game's name!
 	NET_QUERY_PLAYER,			// Hey, what players are in this game?

@@ -64,7 +64,7 @@ class IPXConnClass : public ConnectionClass
 		/*.....................................................................
 		Various useful enums:
 		.....................................................................*/
-		enum IPXConnTag {
+		enum IPXConnTag : unsigned char {
 			CONN_NAME_MAX = 40			// max # chars allowed for connection name
 		};
 

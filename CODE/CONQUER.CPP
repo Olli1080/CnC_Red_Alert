@@ -4383,6 +4383,14 @@ bool Force_CD_Available( int cd_desired )				//	ajw
 	if (cd_desired == CD_LOCAL) return(true);
 
 	/*
+	** Port: with an explicit data location (-CD<path>, e.g. "-CD." for a Steam/GOG copy of the data
+	** sitting in a folder) every file is local - there is no disc to swap. Init_CDROM_Access sets
+	** RequiredCD = -2 for that case, but the scenario loader later overwrites RequiredCD with the
+	** campaign's CD number and calls here, which would show "insert CD" forever.
+	*/
+	if (CCFileClass::Is_There_Search_Drives()) return(true);
+
+	/*
 	** Find out if the CD in the current drive is the one we are looking for
  	*/
 	current_drive = CCFileClass::Get_CD_Drive();

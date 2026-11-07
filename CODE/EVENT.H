@@ -53,7 +53,7 @@ class EventClass
 		/*
 		**	All external events are identified by these labels.
 		*/
-		typedef enum EventType {
+		typedef enum EventType : unsigned char {
 			EMPTY,
 
 			ALLY,					// Make allie of specified house.

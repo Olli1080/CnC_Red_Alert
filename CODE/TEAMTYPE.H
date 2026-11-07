@@ -41,7 +41,7 @@
 /*
 **	TeamMissionType: the various missions that a team can have.
 */
-typedef enum TeamMissionType {
+typedef enum TeamMissionType : signed char {
 	TMISSION_NONE=-1,
 	TMISSION_ATTACK,					// Attack specified quarry type.
 	TMISSION_ATT_WAYPT,				// Attack specified waypoint
@@ -112,7 +112,7 @@ class TeamMemberClass
 class TeamTypeClass : public AbstractTypeClass
 {
 	public:
-		enum TeamTypeClassEnums {
+		enum TeamTypeClassEnums : unsigned char {
 			MAX_TEAM_CLASSCOUNT=5,
 			MAX_TEAM_MISSIONS=20
 		};

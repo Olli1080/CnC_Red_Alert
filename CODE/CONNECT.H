@@ -137,7 +137,7 @@ class ConnectionClass
 		/*.....................................................................
 		These are the possible values for the Code field of the CommHeaderType:
 		.....................................................................*/
-		enum ConnectionEnum {
+		enum ConnectionEnum : unsigned char {
 			PACKET_DATA_ACK,			// this is a data packet requiring an ACK
 			PACKET_DATA_NOACK,		// this is a data packet not requiring an ACK
 			PACKET_ACK,					// this is an ACK for a packet

@@ -470,6 +470,7 @@ PathType * FootClass::Find_Path(CELL dest, FacingType * final_moves, int maxlen,
 		threat				= 0;
 	} else {
 		unit_threat = threat = -1;
+		threat_stage = 0;		// Port: only ever consulted when threat != -1, but it is passed by value to Follow_Edge (MSVC /RTC: uninitialized use).
 	}
 
 	StartLocation = source;

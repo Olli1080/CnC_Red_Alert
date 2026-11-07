@@ -414,7 +414,11 @@ void SidebarClass::Reload_Sidebar(void)
 		houseloaded = PlayerPtr->ActLike;
 	}
 
-	char * sidename = sidebarnames[houseloaded];
+	// Port: this patches a digit into the name, and sidebarnames[] points at string literals, which
+	// MSVC places in read-only memory (Watcom's were writable) - work on a local copy.
+	char sidename[32];
+	strncpy(sidename, sidebarnames[houseloaded], sizeof(sidename) - 1);
+	sidename[sizeof(sidename) - 1] = '\0';
 	*(sidename+4) = '1';
 	SidebarShape = (void*)MFCD::Retrieve(sidename);
 	*(sidename+4) = '2';
@@ -1252,7 +1256,10 @@ void SidebarClass::StripClass::Init_Theater(TheaterType theater)
 		**	Make sure that remapping doesn't occur on the colors that cycle.
 		*/
 		PaletteClass pal = OriginalPalette;
-		memset(&pal[CYCLE_COLOR_START*3], 0x3f, CYCLE_COLOR_COUNT*3);
+		// Port: PaletteClass::operator[] indexes whole 3-byte RGB entries, not bytes. The original
+		// "[CYCLE_COLOR_START*3]" (a leftover from when this was a raw byte palette) pointed 32 entries
+		// past the end of the 768-byte palette and smashed the caller's stack frame.
+		memset(&pal[CYCLE_COLOR_START], 0x3f, CYCLE_COLOR_COUNT*3);
 		Build_Translucent_Table(pal, &ClockCols[0], 1, (void*)ClockTranslucentTable);
 
 //		Mem_Copy(GamePalette, OriginalPalette, 768);
