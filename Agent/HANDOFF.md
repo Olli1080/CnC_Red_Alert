@@ -92,7 +92,7 @@ Key code: `CODE/STARTUP.CPP` (`WinMain`; the *live* video init is inlined there 
 
 ## 9. Known unknowns / backlog
 - **Sound effects**: fixed (#26), confirm in a real mission. Also unverified: speech/EVA (`Speak`/`Play_Sample` with `Options.Volume`), `Sample_Copy` for compression types other than 99.
-- **Audit candidates after #26**: other `WIN32LIB` structs without their own `pack` that are included after a `#pragma pack(n)` (compare `sizeof` from two TUs).
+- **Ambient-pack audit after #26: done** (no second instance; `static_assert`s guard `SampleTrackerType`/`LockedDataType`; method and the harmless WIN32LIB-vs-CODE duplicate classes in pitfalls #26). Still open from the old audit list: on-disk/save-game structs in CODE (CODE now builds with default 8-byte packing, Westwood used `/zp1`).
 - **Movies**: [plans_wip/movies.md](plans_wip/movies.md) (decision pending; owner's idea: offline-transcode their own `.BK2` files to AV1 into a git-ignored cache + play them with a permissive decoder such as dav1d).
 - Mission 2+, save/load (structs with 32-bit pointers not audited), skirmish, in-game dialogs, options menu, alt-tab/device loss, window resize.
 - Audits not done yet (see [Analysis/summary.md](Analysis/summary.md)): WIN32LIB on-disk structs against 2-byte packing line by line; enums that `scripts/size_enums.py` skips (`KeyNumType`, `VersionEnum`, `MapEnum`) and enums inside persisted structs; ~157 harmless-looking literal -> `char *` bindings; trigger-name pointer in a 32-bit slot (`TACTION.CPP:267`, `TRIGTYPE.CPP:1895`).

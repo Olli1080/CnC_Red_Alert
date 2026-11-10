@@ -272,6 +272,14 @@ typedef struct LockedData {
 	BOOL					_int;
 } LockedDataType;
 
+// Layout guards (x64): these structs are shared between SOUNDIO.CPP, SOUNDINT.CPP, SOUNDLCK.CPP and the
+// rest of the library, and those files are compiled under different ambient #pragma pack values. If a
+// member type has no explicit pack of its own the size silently differs per translation unit
+// (that made LockedData.SoundVolume 0 and all sound effects silent - pitfalls #26). Fails to compile
+// in any TU that sees a different layout.
+static_assert(sizeof(SampleTrackerType) == 298, "SampleTrackerType layout differs in this translation unit");
+static_assert(sizeof(LockedDataType) == 1528, "LockedDataType layout differs in this translation unit");
+
 extern LockedDataType LockedData;
 #pragma pack(pop)
 
