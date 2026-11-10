@@ -1,9 +1,9 @@
 # HANDOFF - read this first
 
-*Last updated 2026-11-10. If anything here disagrees with the code, trust the code and fix this file.*
+*Last updated 2026-11-10 (sound effects fixed, #26). If anything here disagrees with the code, trust the code and fix this file.*
 
 ## 1. Where the project stands (one paragraph)
-This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It is being **modernized to build with CMake + vcpkg on MSVC 2026, x64 only** (see [plans_wip/modernization_cmake_vcpkg.md](plans_wip/modernization_cmake_vcpkg.md)). `win32lib.lib`, `redalert_code.lib` and **`redalert.exe` build with 0 errors and 0 unresolved externals** (all ~66 remaining `.ASM` files were rewritten in C++; no assembler dependency). Run against the owner's own game data with `scripts/runtest.ps1`, the game is now **playable from the main menu through the first mission**: menu with working mouse -> Start New Game (Allies) -> mission 1 (map, units, sidebar, correct colours, music, scroll speed all confirmed by the owner) -> mission end -> score screen -> campaign map animation (confirmed 2026-11-07). **Open, in priority order:** (1) **almost all sound effects are missing** (owner report 2026-11-10; music and the sidebar click work) - this is the next task; (2) movies are skipped (`VQASTUB.CPP`) - options and the owner's preferred route in [plans_wip/movies.md](plans_wip/movies.md); (3) mission 2 and later, save/load, skirmish, speech are unverified.
+This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It is being **modernized to build with CMake + vcpkg on MSVC 2026, x64 only** (see [plans_wip/modernization_cmake_vcpkg.md](plans_wip/modernization_cmake_vcpkg.md)). `win32lib.lib`, `redalert_code.lib` and **`redalert.exe` build with 0 errors and 0 unresolved externals** (all ~66 remaining `.ASM` files were rewritten in C++; no assembler dependency). Run against the owner's own game data with `scripts/runtest.ps1`, the game is now **playable from the main menu through the first mission**: menu with working mouse -> Start New Game (Allies) -> mission 1 (map, units, sidebar, correct colours, music, scroll speed all confirmed by the owner) -> mission end -> score screen -> campaign map animation (confirmed 2026-11-07). **Sound effects now work** (owner heard the self-test effects, 2026-11-10; the cause was a struct-size mismatch between two translation units, pitfalls #26) - in-mission behaviour (many simultaneous sounds, fading, speech/EVA) still needs the owner's ear. **Open, in priority order:** (1) movies are skipped (`VQASTUB.CPP`) - options and the owner's preferred route in [plans_wip/movies.md](plans_wip/movies.md); (2) mission 2 and later, save/load, skirmish, EVA speech are unverified.
 
 ## 2. Status at a glance
 | Stage | State |
@@ -15,14 +15,14 @@ This repo is EA's 2025 GPL release of Red Alert (1996, Watcom/TASM, 32-bit). It 
 | **Start New Game -> mission 1** | works, **verified by the owner**: scenario loads, logic runs, map/units/sidebar render with correct colours (#21), input works, scrolling speed OK after 60 Hz pacing (#24) |
 | Mission end, score screen, **campaign map animation** | works, **verified by the owner** (#25: four WSA/LCW bugs) |
 | Music | works (real SOS IMA-ADPCM decoder, #22; verified by ear) |
-| **Sound effects** | **mostly missing** (owner 2026-11-10). Only the sidebar click was ever looked at (its crash fixed, #23). Path to inspect: `Play_Sample` -> `Sample_Copy`/`Decompress_Frame` (`SCOMP_WESTWOOD`, `AUDUNCMP.CPP`) -> `SOUNDINT.CPP` / `SOUNDIO.CPP` mixer. Start by logging which `Play_Sample` calls happen and what `Sample_Copy` returns |
+| **Sound effects** | **work** (fixed 2026-11-10, #26: `SoundVolume` was 0 because `_SOS_COMPRESS_INFO` had no explicit pack -> two `LockedData` layouts; the effects went to DirectSound at -10000 dB). Verified by a startup self-test + the owner hearing the first effects; **not yet verified in a running mission** (mixing of many sounds, fades, `Sample_Copy` for other compression types). 31 of 164 `VOC_*` files do not exist in the owner's data (Aftermath/Counterstrike-only voices, `MINELAY1.V03`, `VEHIC1.V03`) - expected silence |
 | Movies (intro, briefings, cutscenes) | skipped: `CODE/VQASTUB.CPP` stubs `VQA_*`. The owner's data has only 2 classic VQAs; everything else is Remastered Bink 2 - see [plans_wip/movies.md](plans_wip/movies.md) |
 | Mission 2+, save/load, skirmish/multiplayer, speech/EVA, alt-tab/device loss | unverified. WOL/modem multiplayer is excluded |
 | Presenter draw path | runs and is correct (displayed indices matched an independent decode exactly) |
 
 **The two insights that will save you the most time:**
 1. Westwood compiled `CODE/` with `/zp1` (byte-packed structs, `CODE/MAKEFILE:113`) but `WIN32LIB` with Watcom's default `/zp2`; MSVC defaults to 8-byte alignment. Every on-disk/network/shared struct is potentially the wrong size ([pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md), pitfalls #3, #25).
-2. Watcom differences beyond packing keep producing crashes that look unrelated: minimal-size enums in file formats (#20), writable string literals (#18), 32-bit `long`/pointers (#1, #12, #23), `bool` that held a state (#17), static-init order (#21), stubbed ASM replacements (#22), ASM->C++ argument-semantics mismatches (#25). Walk [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) before theorising about the next crash.
+2. Watcom differences beyond packing keep producing crashes that look unrelated: minimal-size enums in file formats (#20), writable string literals (#18), 32-bit `long`/pointers (#1, #12, #23), `bool` that held a state (#17), static-init order (#21), stubbed ASM replacements (#22), ASM->C++ argument-semantics mismatches (#25), ambient-pack structs embedded in shared structs (#26). Walk [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) before theorising about the next crash.
 
 ## 3. First 30 minutes
 ```powershell
@@ -51,7 +51,7 @@ git status                                   # expect a clean tree (everything b
 | `52f2674`, `e0d0c10`, `e4a10fe` | Boot to the rendering main menu: `.SHP`/`CompHeaderType` packing, 64-bit shape cache, 6-bit palette scale (#12-#15) |
 | `cc71819`, `ef0fee9`, `eacb07d`, `d1db96f`, `e75d5bf` | 2026-09-20: pragma-pack scoping in `AUDIO.H`/`SOUNDINT.H`, `MixFileClass::FileHeader` 6 bytes, palette reaching the presenter, `runtest.ps1` + this documentation set |
 | `86f6b00`, `61244a5`, `82abd41`, `356b3b5`, `9cc6035` | D3D11 presenter; 1c/1b/1a; Phase 0 skeleton. Narratives: [plans_done/](plans_done/summary.md) (`code_1c_port_log.md` is the richest) |
-Docs-only commits since: `11c9a6c`, `4a09888` (owner confirmations), `d1263b1`, `f6d1c40` (movies options), and the commit that carries this file.
+Sound effects: commit after `8efae94` (SOSCOMP.H pack fix + docs, #26). Docs-only commits since: `11c9a6c`, `4a09888` (owner confirmations), `d1263b1`, `f6d1c40` (movies options), and the commit that carries this file.
 
 ## 5. Techniques that worked (details in the linked docs)
 - **Hardware write breakpoint** finds a memory corruptor in one run (`ba w4/w8`, address must be aligned) - [debugging doc](knowledge_base/debugging_and_runtime_testing.md), pitfalls #25.
@@ -65,7 +65,7 @@ Docs-only commits since: `11c9a6c`, `4a09888` (owner confirmations), `d1263b1`, 
 |---|---|
 | What each module does | [project_state/](project_state/summary.md) |
 | Build/run/debug how-to | [knowledge_base/debugging_and_runtime_testing.md](knowledge_base/debugging_and_runtime_testing.md), `scripts/runtest.ps1` |
-| Bug classes found so far (triage checklist, #0-#25) | [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) |
+| Bug classes found so far (triage checklist, #0-#26) | [knowledge_base/x64_porting_pitfalls.md](knowledge_base/x64_porting_pitfalls.md) |
 | The struct-packing saga | [knowledge_base/pragma_pack_leak_odr.md](knowledge_base/pragma_pack_leak_odr.md) |
 | Active work plan (next steps) | [plans_wip/boot_to_main_menu.md](plans_wip/boot_to_main_menu.md) |
 | Movies: options, owner's AV1 idea, data facts | [plans_wip/movies.md](plans_wip/movies.md) |
@@ -91,7 +91,8 @@ Key code: `CODE/STARTUP.CPP` (`WinMain`; the *live* video init is inlined there 
 - Environment: German-locale Windows 11, Intel iGPU, VS 2026 (MSBuild messages German; `error C####` tags are not). The machine once did a hardware "safety shutdown" during a test run (unrelated to the code as far as anyone can tell) - the script kills the game after a timeout, keep runs short.
 
 ## 9. Known unknowns / backlog
-- **Sound effects** (top priority, see table). Also unverified: speech/EVA, `Sample_Copy` for the other compression types.
+- **Sound effects**: fixed (#26), confirm in a real mission. Also unverified: speech/EVA (`Speak`/`Play_Sample` with `Options.Volume`), `Sample_Copy` for compression types other than 99.
+- **Audit candidates after #26**: other `WIN32LIB` structs without their own `pack` that are included after a `#pragma pack(n)` (compare `sizeof` from two TUs).
 - **Movies**: [plans_wip/movies.md](plans_wip/movies.md) (decision pending; owner's idea: offline-transcode their own `.BK2` files to AV1 into a git-ignored cache + play them with a permissive decoder such as dav1d).
 - Mission 2+, save/load (structs with 32-bit pointers not audited), skirmish, in-game dialogs, options menu, alt-tab/device loss, window resize.
 - Audits not done yet (see [Analysis/summary.md](Analysis/summary.md)): WIN32LIB on-disk structs against 2-byte packing line by line; enums that `scripts/size_enums.py` skips (`KeyNumType`, `VersionEnum`, `MapEnum`) and enums inside persisted structs; ~157 harmless-looking literal -> `char *` bindings; trigger-name pointer in a 32-bit slot (`TACTION.CPP:267`, `TRIGTYPE.CPP:1895`).

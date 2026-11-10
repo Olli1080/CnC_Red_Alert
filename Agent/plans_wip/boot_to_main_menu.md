@@ -1,6 +1,6 @@
 ---
 name: boot-to-main-menu
-description: Active plan - redalert.exe boots, the menu works and mission 1 plus the campaign map are playable (M1-M4 done); M5 audio is half done (music yes, sound effects missing); next steps and the loop to follow
+description: Active plan - redalert.exe boots, the menu works and mission 1 plus the campaign map are playable (M1-M4 done); M5 audio is done except in-mission verification (music yes, sound effects fixed 2026-11-10, #26); next steps and the loop to follow
 metadata:
   type: plan
 ---
@@ -10,14 +10,14 @@ metadata:
 Parent plan: [modernization_cmake_vcpkg.md](modernization_cmake_vcpkg.md) (Phases 0-3 done; this is the runtime-bring-up tail of Phase 1/3). Start with [../HANDOFF.md](../HANDOFF.md) for state, tools and rules.
 
 ## Status (2026-11-10): M1-M4 DONE, M5 half done
-`Init_Game` returns, the main menu renders and is operable, Start New Game (Allies) loads mission 1 which is playable to the end (map, units, sidebar, colours, music, scroll speed confirmed by the owner), followed by the score screen and the campaign map animation. **Open: sound effects are almost entirely missing (owner, 2026-11-10), movies are skipped, mission 2+ unverified.** The sections below keep the original step-by-step history; the live to-do list is 'Next concrete steps' at the end.
+`Init_Game` returns, the main menu renders and is operable, Start New Game (Allies) loads mission 1 which is playable to the end (map, units, sidebar, colours, music, scroll speed confirmed by the owner), followed by the score screen and the campaign map animation. **Sound effects were fixed 2026-11-10 (#26). Open: movies are skipped, mission 2+ unverified, effects not yet confirmed during a real mission.** The sections below keep the original step-by-step history; the live to-do list is 'Next concrete steps' at the end.
 
 ## Goal / definition of done
 1. **M1**: `Init_Game()` returns (no crash) - all of `Bootstrap`, `Init_Mouse`, fonts, palette, one-time systems pass.
 2. **M2**: the main menu draws non-black, correctly coloured pixels in the D3D11 window (first proof the presenter's *draw path* and palette texture work - neither has ever executed).
 3. **M3** (DONE): mouse cursor visible and moving; menu buttons respond to input.
 4. **M4** (DONE): a scenario loads and the map renders (`Buffer_Frame_To_Page`, stamps, shapes exercised for real); mission 1 plays to the end.
-5. **M5** (PARTLY): audio (DirectSound) initialises (done), music plays (done, SOS ADPCM decoder), **sound effects play (open)**.
+5. **M5** (PARTLY): audio (DirectSound) initialises (done), music plays (done, SOS ADPCM decoder), **sound effects play (done 2026-11-10, #26; confirm in a mission)**.
 
 ## The loop (this is 90% of the work)
 ```
@@ -56,7 +56,7 @@ Alt-tab/focus/device-loss; window resize; movies (VQA/MPEG stubbed - see [movies
 
 ## Next concrete steps (start here)
 Done so far: menu + input (#16, #17), scenario load and logic ticks, rendering and colours (#21), enum/literal/pointer audits (#18-#20, #23), music (#22), pacing (#24), mission end + campaign map (#25). Continue the same loop (`scripts/runtest.ps1 debug`, the owner plays after saying "start"; stack in `build\runtest\cdb.log`).
-1. **Sound effects (next task).** Owner: "almost all sound effects are missing"; music and the sidebar click work. Method: (a) temporary logging in `Play_Sample`/`Sample_Copy`/`Play_Sample_Handle` (what is requested, what comes back, `scomp` type, `DestPtr`, volume) and an environment-gated self-test that plays a few known effects (`MFCD::Retrieve("...AUD")`) right after `Init_Game` - this lets you check without the owner; (b) check `SCOMP_WESTWOOD` (`WIN32LIB/AUDIO/AUDUNCMP.CPP`, never executed before the sidebar click) against `AUDUNCMP.ASM`; (c) look for 32-bit truncations / stubs in the mixer path (`SOUNDINT.CPP` interrupt/timer callback, `SOUNDIO.CPP`, `Sound_Callback`, sample limits `MAX_SFX`, the `StreamLowImpact` handling); (d) compare what the original does when `Options` volume is applied. Verify by ear with the owner only after the self-test is satisfied.
+1. ~~Sound effects~~ **DONE 2026-11-10** (#26): `LockedData.SoundVolume` was 0 (two TUs saw different `SampleTrackerType` sizes because `_SOS_COMPRESS_INFO` had no explicit pack). Remaining: have the owner listen during a real mission (gunfire/explosions overlapping, EVA speech).
 2. **Movies** - decide with the owner ([movies.md](movies.md)); nothing to do until then.
 3. Play on: mission 2+, options menu, save/load, in-game dialogs; each crash -> root cause -> pitfalls doc.
 4. Run the remaining proactive audits ([../Analysis/summary.md](../Analysis/summary.md)): WIN32LIB on-disk structs vs 2-byte packing, enum audit leftovers, save-game struct layout.

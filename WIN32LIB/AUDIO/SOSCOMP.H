@@ -39,6 +39,11 @@ enum {
 	};
 
 /* define compression structure */
+// Layout pinned (natural 8-byte packing): the struct has no on-disk meaning, but it is embedded in
+// SampleTrackerType, and without an explicit pack its size depended on whatever #pragma pack was
+// active in the including .CPP (SOUNDIO.CPP: 4, SOUNDLCK.CPP: default) -> two different LockedData
+// layouts (Agent/knowledge_base/pragma_pack_leak_odr.md; SoundVolume was 0 -> all effects silent).
+#pragma pack(push, 8)
 typedef struct _tagCOMPRESS_INFO {
 	char       *lpSource;
 	char       *lpDest;
@@ -62,6 +67,8 @@ typedef struct _tagCOMPRESS_INFO {
 	short         wBitSize;
 	short			  wChannels;		//added BP for # of channels
 	} _SOS_COMPRESS_INFO;
+#pragma pack(pop)
+static_assert(sizeof(_SOS_COMPRESS_INFO) == 72, "_SOS_COMPRESS_INFO layout changed");
 
 /* compressed file type header */
 typedef struct _tagCOMPRESS_HEADER {
